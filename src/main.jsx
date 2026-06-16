@@ -29,13 +29,7 @@ await import('./builder/lesson.jsx')
 await import('./builder/sidebar.jsx')
 await import('./builder/importer.jsx')
 await import('./builder/library.jsx')
+await import('./builder/cloud.jsx')
 await import('./builder/dashboard.jsx')
 await import('./builder/gate.jsx')
-
-// seed the library once (before the app renders) so the dashboard isn't empty
-if (!localStorage.getItem('lib_seeded')) {
-  if (globalThis.loadLibrary().length === 0) globalThis.libraryUpsert(globalThis.loadCourse())
-  localStorage.setItem('lib_seeded', '1')
-}
-
 await import('./builder/app.jsx') // this one renders the app

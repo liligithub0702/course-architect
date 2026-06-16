@@ -163,9 +163,10 @@ function App() {
     setScreen('builder');
   }
   function backToLibrary() {
-    libraryUpsert(course); // save current work to the library
+    cloudSaveCourse(course) // save current work to the shared library
+      .then(() => toast('Saved to library'))
+      .catch(e => toast('Save failed: ' + e.message));
     setScreen('dashboard');
-    toast('Saved to library');
   }
 
   const lessons = course.lessons.filter(l => l.kind === 'lesson');

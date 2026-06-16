@@ -8,15 +8,22 @@
    ============================================================ */
 
 function Dashboard({ onOpen, onNew, onImport }) {
-  const [lib, setLib] = useState(loadLibrary);
+  const [lib, setLib] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  function refresh() { setLib(loadLibrary()); }
+  function refresh() {
+    setLoading(true); setError('');
+    cloudListCourses()
+      .then(rows => { setLib(rows); setLoading(false); })
+      .catch(e => { setError(e.message); setLoading(false); });
+  }
+  useEffect(() => { refresh(); }, []);
 
   function del(entry) {
     const name = (entry.title || 'this course').replace(/<[^>]+>/g, '');
-    if (!confirm('Delete “' + name + '” from the library? This cannot be undone.')) return;
-    libraryDelete(entry.id);
-    refresh();
+    if (!confirm('Delete “' + name + '” from the shared library? This cannot be undone.')) return;
+    cloudDeleteCourse(entry.id).then(refresh).catch(e => setError(e.message));
   }
 
   function fmtDate(ms) {
@@ -42,8 +49,11 @@ function Dashboard({ onOpen, onNew, onImport }) {
           </div>
         </header>
 
+        {loading && <p className="dash__empty">Loading the shared library…</p>}
+        {error && <p className="dash__error">{error}</p>}
+
         <div className="dash__grid">
-          {lib.map(entry => {
+          {!loading && lib.map(entry => {
             const color = accentColor(entry.accent);
             return (
               <div className="dcard" key={entry.id}>
@@ -74,7 +84,7 @@ function Dashboard({ onOpen, onNew, onImport }) {
           </button>
         </div>
 
-        {lib.length === 0 && (
+        {!loading && lib.length === 0 && (
           <p className="dash__empty">No saved courses yet. Create one above — it’ll appear here for the whole team.</p>
         )}
 
