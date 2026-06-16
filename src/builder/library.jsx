@@ -353,5 +353,10 @@ function CourseManager({ course, onLoad, onLinkLibrary, onClose, toast }) {
   );
 }
 
-window.CourseManager = CourseManager;
-window.OutlineImport = OutlineImport;
+Object.assign(window, {
+  CourseManager, OutlineImport,
+  loadLibrary, saveLibrary, libraryUpsert, libraryDelete,
+});
+
+
+export {}; // marks this file as an ES module for Vite

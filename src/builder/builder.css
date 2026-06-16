@@ -779,3 +779,48 @@ body.editing [data-editable]:hover { background: color-mix(in srgb, var(--blue) 
 .gate__btn:hover:not(:disabled) { background: #322c78; transform: translateY(-1px); }
 .gate__btn:disabled { opacity: .5; cursor: default; }
 .gate__hint { font-size: 12px; color: var(--gray); margin: 16px 0 0; }
+
+/* ============================================================
+   Dashboard — course library screen
+   ============================================================ */
+.dash { min-height: 100vh; background: var(--canvas); overflow-y: auto; }
+.dash__inner { max-width: 1080px; margin: 0 auto; padding: 56px 32px 80px; }
+.dash__head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 36px; flex-wrap: wrap; }
+.dash__eyebrow { font-size: 12.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--magenta); margin-bottom: 10px; }
+.dash__title { font-size: clamp(30px, 5vw, 42px); color: var(--ink); }
+.dash__sub { font-size: 16px; color: var(--gray); margin-top: 8px; }
+.dash__actions { display: flex; gap: 10px; align-items: center; }
+.dash__new { display: inline-flex; align-items: center; gap: 8px; background: var(--indigo); color: #fff; border: none; border-radius: 999px; padding: 12px 22px; font: 700 14.5px var(--font); cursor: pointer; box-shadow: var(--shadow-md); transition: transform .15s, box-shadow .15s; }
+.dash__new:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+
+.dash__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.dcard { position: relative; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; transition: transform .15s, box-shadow .15s; display: flex; }
+.dcard:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+.dcard__stripe { width: 6px; flex: none; align-self: stretch; }
+.dcard__body { padding: 20px 22px; flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.dcard__top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.dcard__pill { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; border-radius: 999px; padding: 4px 11px; }
+.dcard__del { background: none; border: none; color: var(--gray-light); cursor: pointer; padding: 2px; transition: color .15s; }
+.dcard__del:hover { color: var(--magenta); }
+.dcard__title { font-size: 18px; font-weight: 800; color: var(--ink); line-height: 1.25; margin-bottom: 10px; }
+.dcard__meta { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--gray); margin-bottom: 18px; }
+.dcard__meta span { display: inline-flex; align-items: center; gap: 5px; }
+.dcard__dot { color: var(--line-strong); }
+.dcard__open { margin-top: auto; align-self: flex-start; display: inline-flex; align-items: center; gap: 7px; background: var(--canvas-2); color: var(--indigo); border: none; border-radius: 999px; padding: 9px 18px; font: 700 13.5px var(--font); cursor: pointer; transition: background .15s, color .15s; }
+.dcard__open:hover { background: var(--indigo); color: #fff; }
+
+.dcard--new { flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 180px; border: 2px dashed var(--line-strong); background: transparent; box-shadow: none; cursor: pointer; padding: 24px; text-align: center; color: var(--gray); font-family: var(--font); }
+.dcard--new:hover { border-color: var(--indigo); color: var(--indigo); background: color-mix(in srgb, var(--indigo) 3%, #fff); transform: translateY(-3px); }
+.dcard--new__icon { width: 48px; height: 48px; border-radius: 50%; background: var(--paper); box-shadow: var(--shadow-sm); display: grid; place-items: center; }
+.dcard--new__label { font-size: 15px; font-weight: 700; color: var(--ink); }
+.dcard--new__sub { font-size: 12.5px; color: var(--gray); }
+
+.dash__empty { text-align: center; color: var(--gray); font-size: 14px; margin-top: 28px; }
+
+/* library back button in the builder top bar */
+.topbar__lib { padding: 7px 14px !important; }
+
+@media (max-width: 560px) {
+  .dash__inner { padding: 36px 20px 60px; }
+  .dash__head { flex-direction: column; align-items: stretch; }
+}

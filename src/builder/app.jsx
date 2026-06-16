@@ -139,12 +139,34 @@ function App() {
   const [editing, setEditing] = useState(false);
   const [view, setView] = useState({ type: 'cover' });
   const [showImporter, setShowImporter] = useState(false);
+  const [screen, setScreen] = useState('dashboard'); // 'dashboard' | 'builder'
   const [toastNode, toast] = useToast();
 
   // autosave
   useEffect(() => { saveCourse(course); }, [course]);
   useEffect(() => { saveProgress(progress); }, [progress]);
   useEffect(() => { document.body.classList.toggle('editing', editing); }, [editing]);
+
+  /* ---- dashboard <-> builder navigation ---- */
+  function openFromLibrary(entry) {
+    setCourse(JSON.parse(JSON.stringify(entry.course)));
+    setProgress({ completed: {}, answers: {} });
+    setView({ type: 'cover' });
+    setEditing(false);
+    setScreen('builder');
+  }
+  function newCourse() {
+    setCourse(blankCourse());
+    setProgress({ completed: {}, answers: {} });
+    setView({ type: 'cover' });
+    setEditing(true);
+    setScreen('builder');
+  }
+  function backToLibrary() {
+    libraryUpsert(course); // save current work to the library
+    setScreen('dashboard');
+    toast('Saved to library');
+  }
 
   const lessons = course.lessons.filter(l => l.kind === 'lesson');
   const totalLessons = lessons.length;
@@ -200,8 +222,9 @@ function App() {
   function importCourse(parsed) {
     setCourse(parsed);
     setProgress({ completed: {}, answers: {} });
-    go({ type: 'cover' });
+    setView({ type: 'cover' });
     setShowImporter(false);
+    setScreen('builder');
     toast('Course imported from outline');
   }
 
@@ -264,6 +287,18 @@ function App() {
     : view.type === 'complete' ? 'Completion'
     : (course.lessons.find(l => l.id === view.id) || {}).title || '';
 
+  // ---- dashboard screen ----
+  if (screen === 'dashboard') {
+    return (
+      <React.Fragment>
+        <Dashboard onOpen={openFromLibrary} onNew={newCourse} onImport={() => setShowImporter(true)} />
+        {showImporter && <ImportModal onImport={importCourse} onClose={() => setShowImporter(false)} />}
+        {toastNode}
+      </React.Fragment>
+    );
+  }
+
+  // ---- builder screen ----
   return (
     <div className="app">
       <Sidebar course={course} currentView={view} completed={completed} editing={editing}
@@ -273,6 +308,7 @@ function App() {
       <div className="main">
         <header className="topbar">
           <button className="topbar__menubtn" onClick={() => document.body.classList.toggle('nav-open')} aria-label="Menu"><Icon name="menu" /></button>
+          <button className="btn-ghost topbar__lib" onClick={backToLibrary}><Icon name="arrowLeft" size={14} /> Library</button>
           <div className="topbar__crumb"><span dangerouslySetInnerHTML={{ __html: course.meta.title }}></span> <Icon name="arrowRight" size={13} /> <b dangerouslySetInnerHTML={{ __html: crumbTitle }}></b></div>
           <span className="topbar__spacer"></span>
           <span className={'topbar__badge ' + (editing ? 'edit' : 'learn')}>{editing ? 'Author mode' : 'Learner view'}</span>
@@ -287,7 +323,9 @@ function App() {
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<Gate><App /></Gate>);
+// reuse one root so hot-reload doesn't create it twice
+if (!window.__caRoot) window.__caRoot = ReactDOM.createRoot(document.getElementById('root'));
+window.__caRoot.render(<Gate><App /></Gate>);
 
 
 export {}; // marks this file as an ES module for Vite

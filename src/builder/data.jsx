@@ -278,7 +278,7 @@ function Icon({ name, size, stroke, fill, style, className }) {
 Object.assign(window, {
   STORE_KEY, PROGRESS_KEY, uid,
   loadCourse, saveCourse, loadProgress, saveProgress,
-  ACCENTS, accentColor, newBlock, BLOCK_LIBRARY, defaultCourse,
+  ACCENTS, accentColor, newBlock, BLOCK_LIBRARY, defaultCourse, blankCourse,
   Icon, FLIP_ICONS,
 });
 
