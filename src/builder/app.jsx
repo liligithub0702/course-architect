@@ -287,7 +287,7 @@ function App() {
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+ReactDOM.createRoot(document.getElementById('root')).render(<Gate><App /></Gate>);
 
 
 export {}; // marks this file as an ES module for Vite

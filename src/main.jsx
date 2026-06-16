@@ -28,4 +28,5 @@ await import('./builder/blocks-extra.jsx')
 await import('./builder/lesson.jsx')
 await import('./builder/sidebar.jsx')
 await import('./builder/importer.jsx')
+await import('./builder/gate.jsx')
 await import('./builder/app.jsx') // this one renders the app
