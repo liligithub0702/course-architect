@@ -739,3 +739,6 @@ body.editing [data-editable]:hover { background: color-mix(in srgb, var(--blue) 
   .imp-grid { grid-template-columns: 1fr; }
   .imp-pane { min-height: 260px; }
 }
+
+/* neutral wordmark in place of the removed logo image */
+.sidebar__wordmark { font-size: 15px; font-weight: 800; letter-spacing: -0.01em; color: #fff; display: block; }

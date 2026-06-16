@@ -165,7 +165,7 @@ function blankCourse() {
     meta: {
       title: 'Untitled course',
       subtitle: 'A short description of what this course covers.',
-      kicker: 'Sutherland · Training',
+      kicker: 'Training · Self-paced',
       cover: '',
       accent: 'indigo',
       facts: [

@@ -125,7 +125,7 @@ function normalizeAuthoringCourse(raw) {
     meta: {
       title: txt(meta.title) || 'Untitled course',
       subtitle: txt(meta.subtitle),
-      kicker: txt(meta.kicker) || 'Sutherland · Training',
+      kicker: txt(meta.kicker) || 'Training · Self-paced',
       cover: '',
       accent: validAccent(meta.accent),
       facts: facts.length ? facts : [{ k: 'Delivery', v: 'Self-paced' }, { k: 'Duration', v: '60 minutes' }],
