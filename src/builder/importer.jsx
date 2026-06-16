@@ -3,116 +3,7 @@
    Sends the outline to Claude and gets back a complete course.
    ============================================================ */
 
-const AI_MODEL = 'claude-sonnet-4-6';
-const API_KEY_STORE = 'sutherland_anthropic_key_v1';
-
-/* ---- the conversion prompt ---- */
-const COURSE_PROMPT = `You are an expert instructional designer. Convert the course outline below into a complete, rich course JSON object.
-
-SCHEMA:
-{
-  "meta": {
-    "title": "string",
-    "subtitle": "string — 1-2 sentence description",
-    "kicker": "string — e.g. 'MODULE 21 · COMMUNICATIONS VERTICAL · PHASE 4: SPECIALISE'",
-    "cover": "",
-    "accent": "indigo",
-    "facts": [
-      {"k": "Delivery", "v": "Self-paced"},
-      {"k": "Duration", "v": "60 minutes"},
-      {"k": "Competency", "v": "Domain Knowledge"},
-      {"k": "Stage", "v": "Understand"}
-    ]
-  },
-  "lessons": [ ... ]
-}
-
-Each lesson item is either a SECTION (navigation divider, no blocks) or a LESSON (has blocks):
-
-SECTION: { "id": "l1", "kind": "section", "title": "Section Name", "blocks": [] }
-LESSON:  { "id": "l2", "kind": "lesson",  "title": "Lesson Title", "blocks": [...] }
-
-BLOCK TYPES — choose the best fit for each piece of content:
-
-1. Heading (required as first block of every lesson):
-   {"id":"b1","type":"heading","level":"h2","text":"Lesson title","eyebrow":"Optional label e.g. Objective 01"}
-
-2. Text paragraph:
-   {"id":"b2","type":"text","html":"<p>Content. Can include <strong>bold</strong> and <em>italic</em>.</p>"}
-
-3. Statement / callout (key points, tips, examples, scenarios):
-   {"id":"b3","type":"statement","variant":"callout","accent":"blue","label":"Note","title":"Headline","text":"Supporting detail."}
-   - variant: "callout" (information), "example" (case study / real-world scenario), "quote"
-   - accent: "blue" | "green" | "orange" | "magenta" | "indigo"
-   - label: "Note" | "Key Point" | "Example" | "Scenario" | "Tip" | "Warning"
-
-4. Flip cards (terms, concepts, comparisons — use for 2 to 8 items):
-   {"id":"b4","type":"flip","cards":[
-     {"id":"c1","accent":"blue","icon":"layers","kicker":"Category","front":"Term or concept","back":"Full explanation or definition."},
-     {"id":"c2","accent":"magenta","icon":"zap","kicker":"","front":"Second term","back":"Its explanation."}
-   ]}
-   Available icons: layers, wifi, server, globe, zap, database, building, clock, smartphone, radio, cpu, sliders, cloud, shield, book, award
-
-5. Accordion (3 to 6 expandable items — challenges, features, categories):
-   {"id":"b5","type":"accordion","accent":"orange","items":[
-     {"id":"a1","title":"Item title","sub":"Optional subtitle","html":"<p>Expanded content for this item.</p>"},
-     {"id":"a2","title":"Second item","sub":"","html":"<p>Content.</p>"}
-   ]}
-
-6. Tabs (2 to 4 parallel concepts to compare side by side):
-   {"id":"b6","type":"tabs","items":[
-     {"id":"t1","label":"First Tab","html":"<p>Content.</p>"},
-     {"id":"t2","label":"Second Tab","html":"<p>Content.</p>"}
-   ]}
-
-7. Process stepper (sequential steps, timelines, staged processes):
-   {"id":"b7","type":"stepper","steps":[
-     {"id":"s1","icon":"building","name":"Stage name","what":"What happens at this stage.","agent":"Why this matters to the learner / agent."},
-     {"id":"s2","icon":"clock","name":"Next stage","what":"Description.","agent":"Relevance."}
-   ]}
-   Available icons: building, clock, check, smartphone, server, globe, layers, zap, wifi, database
-
-8. Glossary (5 or more technical term definitions):
-   {"id":"b8","type":"glossary","terms":[
-     {"id":"g1","term":"Technical term","def":"Clear definition."},
-     {"id":"g2","term":"Another term","def":"Definition."}
-   ]}
-
-9. Multiple choice question (knowledge checks, quizzes):
-   {"id":"b9","type":"mcq","graded":true,"question":"Question text?",
-    "options":[
-      {"id":"o1","text":"Option A","feedback":"Why this is right or wrong."},
-      {"id":"o2","text":"Option B","feedback":"Feedback."},
-      {"id":"o3","text":"Option C","feedback":"Feedback."}
-    ],
-    "correct":"o1"}
-   NOTE: "correct" must equal the "id" of the correct option.
-
-CONTENT & STRUCTURE RULES:
-- Create one SECTION for each major course part (e.g. Introduction, Core Knowledge, Practice, Wrap Up)
-- Create one LESSON per learning objective or distinct topic
-- Every lesson MUST start with a "heading" block
-- Aim for 4–8 blocks per lesson — use the rich block types, not just text
-- Use "flip" cards for vocabulary, key terms, and short concept pairs
-- Use "stepper" for any timeline, chronological sequence, or multi-stage process
-- Use "accordion" for any list of 3+ challenges, features, benefits, or options
-- Use "tabs" when comparing two sides or two categories (e.g. Equipment vs Services)
-- Use "glossary" for a dedicated terms/definitions lesson
-- Use "mcq" for every practice activity or knowledge check question
-- Use "statement" with variant="example" for any real-world scenario, agent dialogue, or case study
-- Use "text" only for narrative paragraphs that don't fit another block type
-- Extract and use ALL content from the outline — do not summarise or skip sections
-- Pull actual text, real examples, correct answers, and feedback from the outline
-- For MCQs, set the correct answer and write accurate feedback for each option
-- Generate all IDs as short unique strings: l1, l2, b1, b2, c1, c2, o1, o2, etc.
-
-OUTPUT REQUIREMENTS:
-- Respond with ONLY the JSON object — no explanation, no markdown fences
-- Keep string values concise; do not pad with unnecessary whitespace
-- Use compact JSON (no extra blank lines between properties)
-
-OUTLINE TO CONVERT:
-`;
+const PASSWORD_STORE = 'sutherland_team_password_v1';
 
 /* ---- freshen all IDs to avoid collisions with existing course data ---- */
 function freshIds(course) {
@@ -178,35 +69,26 @@ function repairJson(str) {
   return JSON.parse(fixed);
 }
 
-/* ---- call Claude API ---- */
-async function convertWithAI(text, apiKey, onStatus) {
+/* ---- call our backend (which holds the key + checks the password) ---- */
+async function convertWithAI(text, password, onStatus) {
   onStatus('Sending outline to Claude…');
 
-  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+  const resp = await fetch('/api/generate', {
     method: 'POST',
-    headers: {
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'content-type': 'application/json',
-      'anthropic-dangerous-direct-browser-access': 'true',
-      'anthropic-beta': 'output-128k-2025-02-19',
-    },
-    body: JSON.stringify({
-      model: AI_MODEL,
-      max_tokens: 16000,
-      messages: [{ role: 'user', content: COURSE_PROMPT + text }],
-    }),
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ text, password }),
   });
 
   if (!resp.ok) {
-    let msg = 'API error ' + resp.status;
-    try { const e = await resp.json(); msg = e.error?.message || msg; } catch (_) {}
+    let msg = 'Error ' + resp.status;
+    try { const e = await resp.json(); msg = e.error || msg; } catch (_) {}
+    if (resp.status === 401) msg = 'Wrong team password — check with your team lead.';
     throw new Error(msg);
   }
 
   onStatus('Parsing course structure…');
   const data = await resp.json();
-  const raw = (data.content && data.content[0]?.text) || '';
+  const raw = data.raw || '';
 
   // Claude may wrap JSON in ```json ... ``` fences
   const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
@@ -244,9 +126,9 @@ async function extractText(file) {
    ImportModal
    ============================================================ */
 function ImportModal({ onImport, onClose }) {
-  const [apiKey, setApiKey]       = useState(() => localStorage.getItem(API_KEY_STORE) || '');
-  const [keyDraft, setKeyDraft]   = useState(() => localStorage.getItem(API_KEY_STORE) || '');
-  const [keySaved, setKeySaved]   = useState(() => !!localStorage.getItem(API_KEY_STORE));
+  const [apiKey, setApiKey]       = useState(() => localStorage.getItem(PASSWORD_STORE) || '');
+  const [keyDraft, setKeyDraft]   = useState(() => localStorage.getItem(PASSWORD_STORE) || '');
+  const [keySaved, setKeySaved]   = useState(() => !!localStorage.getItem(PASSWORD_STORE));
   const [tab, setTab]             = useState('upload');
   const [pasteText, setPasteText] = useState('');
   const [fileName, setFileName]   = useState('');
@@ -259,13 +141,13 @@ function ImportModal({ onImport, onClose }) {
 
   function saveKey() {
     const k = keyDraft.trim();
-    localStorage.setItem(API_KEY_STORE, k);
+    localStorage.setItem(PASSWORD_STORE, k);
     setApiKey(k);
     setKeySaved(true);
   }
 
   async function run(text, label) {
-    if (!apiKey) { setErr('Add your Anthropic API key above first.'); return; }
+    if (!apiKey) { setErr('Enter the team password above first.'); return; }
     if (!text || !text.trim()) { setErr('No content to convert.'); return; }
     setErr(''); setPreview(null); setLoading(true);
     try {
@@ -337,13 +219,13 @@ Supported formats:
             <div className="imp-key-section">
               <div className="imp-key-label">
                 <Icon name="zap" size={13} />
-                <span>Anthropic API key — Claude turns your outline into a full course</span>
+                <span>Team access password — unlocks AI course generation</span>
               </div>
               <div className="imp-key-row">
                 <input
                   className={'imp-key-input' + (keySaved ? ' saved' : '')}
                   type="password"
-                  placeholder="sk-ant-api03-…"
+                  placeholder="Enter team password…"
                   value={keyDraft}
                   onChange={e => { setKeyDraft(e.target.value); setKeySaved(false); }}
                   onKeyDown={e => e.key === 'Enter' && saveKey()}
@@ -354,7 +236,7 @@ Supported formats:
               </div>
               {!keySaved && (
                 <p className="imp-key-hint">
-                  Get a key at <strong>console.anthropic.com</strong> · Stored in your browser only.
+                  Ask your team lead for the password · Stored in your browser only.
                 </p>
               )}
             </div>
