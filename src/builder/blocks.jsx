@@ -294,7 +294,7 @@ function FlipBlock({ block, editing, onChange }) {
               <div className="flip__face flip__front">
                 <div className="flip__icon"><Icon name={c.icon || 'layers'} size={24} /></div>
                 <div className="flip__title" dangerouslySetInnerHTML={{ __html: c.front }}></div>
-                <div className="flip__hint"><Icon name="reset" size={13} /> Tap to flip</div>
+                <div className="flip__hint"><Icon name="reset" size={13} /> Hover or tap to flip</div>
               </div>
               <div className="flip__face flip__back">
                 {c.kicker ? <div className="flip__kicker" dangerouslySetInnerHTML={{ __html: c.kicker }}></div> : null}

@@ -248,11 +248,13 @@ function App() {
   useEffect(() => { saveProgress(progress); }, [progress]);
   useEffect(() => { document.body.classList.toggle('editing', editing); }, [editing]);
 
-  // scroll to top after the browser paints the new lesson (double-RAF ensures post-paint)
+  // scroll to top after the browser paints the new lesson
+  // covers both the inner .scroll div (author mode) and window scroll (learner mode)
   useEffect(() => {
     const id = requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         if (scrollRef.current) scrollRef.current.scrollTop = 0;
+        window.scrollTo({ top: 0, behavior: 'instant' });
       });
     });
     return () => cancelAnimationFrame(id);
