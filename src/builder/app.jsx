@@ -248,8 +248,15 @@ function App() {
   useEffect(() => { saveProgress(progress); }, [progress]);
   useEffect(() => { document.body.classList.toggle('editing', editing); }, [editing]);
 
-  // scroll to top on every view change (runs after React paints the new lesson)
-  useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = 0; }, [view]);
+  // scroll to top after the browser paints the new lesson (double-RAF ensures post-paint)
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (scrollRef.current) scrollRef.current.scrollTop = 0;
+      });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [view]);
 
   /* ---- dashboard <-> builder navigation ---- */
   function openFromLibrary(entry) {
@@ -352,7 +359,7 @@ function App() {
   }
 
   /* ---- navigation / completion ---- */
-  function go(v) { setView(v); document.querySelector('.scroll') && (document.querySelector('.scroll').scrollTop = 0); document.body.classList.remove('nav-open'); }
+  function go(v) { setView(v); document.body.classList.remove('nav-open'); }
   function lessonIndex(id) { return lessons.findIndex(l => l.id === id); }
   function continueFrom(id) {
     setProgress(p => ({ ...p, completed: { ...(p.completed || {}), [id]: true } }));
