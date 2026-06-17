@@ -113,13 +113,6 @@ function Sidebar({ course, currentView, completed, editing, onNavigate,
               </button>
             </div>
           )}
-          {editing && (
-            <div className="sidebar__importrow">
-              <button className="sidebar__importbtn" onClick={onExportScorm}>
-                <Icon name="download" size={14} /> Export SCORM 1.2
-              </button>
-            </div>
-          )}
         </nav>
 
         <div className="sidebar__foot">

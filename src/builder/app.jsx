@@ -221,6 +221,9 @@ function App() {
   useEffect(() => { saveProgress(progress); }, [progress]);
   useEffect(() => { document.body.classList.toggle('editing', editing); }, [editing]);
 
+  // scroll to top on every view change (runs after React paints the new lesson)
+  useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = 0; }, [view]);
+
   /* ---- dashboard <-> builder navigation ---- */
   function openFromLibrary(entry) {
     setCourse(JSON.parse(JSON.stringify(entry.course)));
@@ -409,7 +412,8 @@ function App() {
             <span className="topbar__spacer"></span>
             {!editing && <span className="topbar__prog-pct" ref={progPctRef}>0%</span>}
             <span className={'topbar__badge ' + (editing ? 'edit' : 'learn')}>{editing ? 'Author mode' : 'Learner view'}</span>
-            {editing && <button className="btn-ghost" onClick={() => { if (confirm('Reset the whole course back to the blank template? This erases your content.')) { const d = defaultCourse(); setCourse(d); setProgress({ completed: {}, answers: {} }); go({ type: 'cover' }); toast('Course reset'); } }}><Icon name="reset" size={14} /> Reset template</button>}
+            {editing && <button className="btn-export" onClick={() => exportScorm(course)}><Icon name="download" size={14} /> Export SCORM</button>}
+            {editing && <button className="btn-ghost" onClick={() => { if (confirm('Reset the whole course back to the blank template? This erases your content.')) { const d = defaultCourse(); setCourse(d); setProgress({ completed: {}, answers: {} }); go({ type: 'cover' }); toast('Course reset'); } }}><Icon name="reset" size={14} /> Reset</button>}
           </header>
           <div className="scroll" ref={scrollRef}>{main}</div>
         </div>

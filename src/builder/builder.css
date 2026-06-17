@@ -63,16 +63,25 @@ button { font-family: inherit; }
 /* -------- Sidebar -------- */
 .sidebar {
   width: var(--sidebar-w); flex: none;
-  background: var(--indigo-deep);
+  background: linear-gradient(180deg, #1A1842 0%, #211F4E 100%);
   color: #fff;
   display: flex; flex-direction: column;
   position: sticky; top: 0; height: 100vh;
+  border-right: 1px solid rgba(255,255,255,.06);
+  box-shadow: 4px 0 24px rgba(26,24,66,.18);
 }
-.sidebar__head { padding: 22px 22px 18px; border-bottom: 1px solid rgba(255,255,255,.1); }
-.sidebar__logo { height: 24px; width: auto; display: block; margin-bottom: 16px; }
+.sidebar__head {
+  padding: 24px 22px 20px; border-bottom: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.03);
+}
+.sidebar__logo { height: 26px; width: auto; display: block; margin-bottom: 18px; }
+.sidebar__wordmark {
+  display: block; font-size: 13px; font-weight: 800; letter-spacing: .12em;
+  text-transform: uppercase; color: rgba(255,255,255,.4); margin-bottom: 14px;
+}
 .sidebar__home { display: block; width: 100%; text-align: left; background: none; border: none; cursor: pointer; padding: 0; }
-.sidebar__title { display: block; font-size: 16px; font-weight: 800; letter-spacing: -.01em; color: #fff; line-height: 1.25; }
-.sidebar__sub { display: block; font-size: 12px; color: rgba(255,255,255,.6); margin-top: 4px; font-weight: 500; }
+.sidebar__title { display: block; font-size: 16.5px; font-weight: 800; letter-spacing: -.02em; color: #fff; line-height: 1.25; }
+.sidebar__sub { display: block; font-size: 12px; color: rgba(255,255,255,.5); margin-top: 5px; font-weight: 600; letter-spacing: .02em; }
 .sidebar__home:hover .sidebar__sub { color: rgba(255,255,255,.85); }
 
 .sidebar__progress { padding: 14px 22px 16px; border-bottom: 1px solid rgba(255,255,255,.1); }
@@ -85,22 +94,22 @@ button { font-family: inherit; }
 .lessonlist::-webkit-scrollbar-thumb { background: rgba(255,255,255,.16); border-radius: 8px; }
 
 .navsection {
-  font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
-  color: rgba(255,255,255,.5); padding: 18px 12px 8px; display: flex; align-items: center; gap: 8px;
+  font-size: 10.5px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase;
+  color: rgba(255,255,255,.35); padding: 20px 14px 7px; display: flex; align-items: center; gap: 8px;
 }
-.navsection:first-child { padding-top: 6px; }
+.navsection:first-child { padding-top: 10px; }
 .navsection__edit { display: flex; align-items: center; gap: 8px; }
 
 .navitem {
   display: flex; align-items: center; gap: 11px;
   width: 100%; text-align: left; border: none; background: none; cursor: pointer;
-  color: rgba(255,255,255,.82); font-family: inherit; font-size: 14px; font-weight: 600;
-  padding: 10px 12px; border-radius: 10px; transition: background .14s, color .14s;
+  color: rgba(255,255,255,.72); font-family: inherit; font-size: 13.5px; font-weight: 600;
+  padding: 10px 14px; border-radius: 10px; transition: background .14s, color .14s;
   position: relative;
 }
-.navitem:hover { background: rgba(255,255,255,.08); color: #fff; }
-.navitem.is-active { background: rgba(255,255,255,.14); color: #fff; }
-.navitem.is-active::before { content: ""; position: absolute; left: -14px; top: 8px; bottom: 8px; width: 4px; border-radius: 0 4px 4px 0; background: var(--magenta); }
+.navitem:hover { background: rgba(255,255,255,.07); color: #fff; }
+.navitem.is-active { background: rgba(222,27,84,.16); color: #fff; border: 1px solid rgba(222,27,84,.22); }
+.navitem.is-active::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 0 2px 2px 0; background: var(--magenta); }
 .navitem__check {
   width: 22px; height: 22px; flex: none; border-radius: 50%;
   border: 2px solid rgba(255,255,255,.28); display: grid; place-items: center; transition: all .2s;
@@ -158,6 +167,14 @@ button { font-family: inherit; }
   color: var(--ink-soft); border-radius: 9px; padding: 7px 13px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all .14s;
 }
 .btn-ghost:hover { border-color: var(--indigo); color: var(--indigo); background: var(--canvas); }
+.btn-export {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: linear-gradient(135deg, var(--indigo), var(--indigo-deep));
+  color: #fff; border: none; border-radius: 9px; padding: 8px 15px;
+  font-size: 13px; font-weight: 700; cursor: pointer; transition: all .14s; font-family: inherit;
+  box-shadow: 0 2px 8px rgba(38,35,93,.25);
+}
+.btn-export:hover { box-shadow: 0 4px 16px rgba(38,35,93,.38); transform: translateY(-1px); }
 
 .scroll { flex: 1; overflow-y: auto; }
 .canvas { max-width: 800px; margin: 0 auto; padding: 56px 40px 120px; }
@@ -166,13 +183,13 @@ button { font-family: inherit; }
 /* ============================================================
    COVER / LESSON HEADER
    ============================================================ */
-.lessonhead { margin-bottom: 14px; }
+.lessonhead { margin-bottom: 14px; padding: 48px 0 28px; }
 .lessonhead__kicker {
   display: inline-flex; align-items: center; gap: 9px; font-size: 12.5px; font-weight: 800;
-  letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--magenta); margin-bottom: 20px;
 }
-.lessonhead__kicker .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-.lessonhead h1 { font-size: clamp(30px, 4.4vw, 46px); margin-bottom: 0; max-width: 22ch; }
+.lessonhead__kicker .dot { width: 24px; height: 2px; border-radius: 2px; background: currentColor; border-radius: 2px; }
+.lessonhead h1 { font-size: clamp(36px, 5.4vw, 58px); margin-bottom: 0; max-width: 22ch; letter-spacing: -0.025em; }
 
 /* ---- hero (course home) ---- */
 .canvas--hero { max-width: 980px; padding: 34px 34px 96px; }
@@ -231,9 +248,9 @@ body.editing .hero2 [data-editable]:hover { background: rgba(255,255,255,.12); }
 .blk-heading h3 { font-size: 23px; margin: 0; }
 .blk-heading .eyebrow {
   display: inline-flex; align-items: center; gap: 9px; font-size: 12.5px; font-weight: 800;
-  letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--magenta); margin-bottom: 12px;
 }
-.blk-heading .eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.blk-heading .eyebrow .dot { width: 22px; height: 2px; border-radius: 2px; background: currentColor; }
 
 .blk-text { font-size: 18px; color: var(--ink-soft); line-height: 1.66; }
 .blk-text strong { color: var(--ink); font-weight: 700; }
