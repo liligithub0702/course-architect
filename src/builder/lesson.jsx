@@ -48,8 +48,9 @@ function Inserter({ onClick, big }) {
 /* ---------- block wrapper with author controls ---------- */
 function BlockShell({ block, index, total, editing, onChange, onMove, onDuplicate, onRemove, answer, onAnswer }) {
   const label = (BLOCK_LIBRARY.find(b => b.type === block.type) || {}).label || block.type;
+  const revealProps = !editing ? { 'data-reveal': '', 'data-delay': String(Math.min(index * 80, 400)) } : {};
   return (
-    <div className="blockwrap">
+    <div className="blockwrap" {...revealProps}>
       {editing && <span className="block-tag">{label}</span>}
       {editing && (
         <div className="block-toolbar">
@@ -71,7 +72,31 @@ function BlockShell({ block, index, total, editing, onChange, onMove, onDuplicat
 function LessonView({ lesson, index, editing, onChangeLesson, answers, onAnswer,
                       onPrev, onContinue, isFirst, isLast, completed, accent }) {
   const [picker, setPicker] = useState(null); // insert index or null
+  const canvasRef = useRef(null);
   const blocks = lesson.blocks || [];
+
+  // Bidirectional scroll-reveal — elements glide in on enter, reverse on leave
+  useEffect(() => {
+    if (editing) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const reveals = canvas.querySelectorAll('[data-reveal]');
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        const el = en.target;
+        if (el._rt) { clearTimeout(el._rt); el._rt = null; }
+        if (en.isIntersecting) {
+          const delay = parseFloat(el.dataset.delay || '0');
+          el._rt = setTimeout(() => el.classList.add('is-visible'), delay);
+        } else {
+          el.classList.remove('is-visible');
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+    reveals.forEach(el => io.observe(el));
+    return () => io.disconnect();
+  }, [lesson.id, editing]);
 
   function update(i, nb) { const b = blocks.slice(); b[i] = nb; onChangeLesson({ ...lesson, blocks: b }); }
   function move(i, dir) {
@@ -93,8 +118,8 @@ function LessonView({ lesson, index, editing, onChangeLesson, answers, onAnswer,
 
   const style = { '--accent': accent };
   return (
-    <div className="canvas" style={style}>
-      <div className="lessonhead">
+    <div className="canvas" style={style} ref={canvasRef}>
+      <div className="lessonhead" {...(!editing ? { 'data-reveal': '', 'data-delay': '0' } : {})}>
         <div className="lessonhead__kicker"><span className="dot"></span>
           {editing
             ? <Editable tag="span" editing html={lesson.title} placeholder="Lesson title"

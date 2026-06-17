@@ -826,3 +826,190 @@ body.editing [data-editable]:hover { background: color-mix(in srgb, var(--blue) 
 }
 
 .dash__error { text-align: center; color: var(--magenta); font-size: 14px; margin: 20px 0; background: color-mix(in srgb, var(--magenta) 8%, #fff); border-radius: 10px; padding: 12px 16px; }
+
+/* ============================================================
+   PREMIUM LEARNER VIEW  (Claude Design — v2)
+   Scroll-driven signal rail · ambient blobs · reveal animations
+   Premium flip cards · MCQ badge letters
+   ============================================================ */
+
+/* --- Scroll progress bar (3px gradient line at top of topbar) --- */
+.scroll-prog {
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: rgba(38,35,93,0.08); z-index: 2; pointer-events: none;
+}
+.scroll-prog__fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, #26235D, #DE1B54);
+  transition: width .12s linear;
+}
+.topbar__prog-pct {
+  flex-shrink: 0; font-size: 13px; font-weight: 700; color: #26235D;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Signal rail (fixed left edge) --- */
+.signal-rail {
+  position: fixed; left: 18px; top: 0; bottom: 0; width: 2px; z-index: 45;
+  pointer-events: none;
+}
+.signal-rail__track {
+  position: absolute; inset: 0; background: rgba(38,35,93,0.10); border-radius: 2px;
+}
+.signal-rail__fill {
+  position: absolute; left: 0; top: 0; width: 2px; height: 0px;
+  background: linear-gradient(180deg, rgba(38,35,93,0.45), #26235D 55%, #DE1B54);
+  border-radius: 2px; will-change: height;
+}
+.signal-rail__pulse {
+  position: absolute; left: 1px; top: 0; will-change: transform;
+  transform: translate(-50%, 0);
+}
+.signal-rail__trail {
+  position: absolute; left: 0; top: 0; width: 2px; height: 130px;
+  margin-left: -1px; margin-top: -130px;
+  background: linear-gradient(180deg, transparent, #DE1B54);
+  opacity: 0; border-radius: 2px;
+}
+.signal-rail__node {
+  position: absolute; left: 0; top: 0;
+  width: 14px; height: 14px; margin: -7px 0 0 -7px;
+  border-radius: 50%; background: #26235D;
+  box-shadow: 0 0 12px 3px rgba(38,35,93,0.5);
+  will-change: transform, background, box-shadow;
+}
+
+/* --- Ambient depth blobs (fixed, behind content) --- */
+.ambient-blob-1 {
+  position: fixed; top: 16%; right: -120px; width: 580px; height: 580px;
+  border-radius: 50%; filter: blur(52px);
+  background: radial-gradient(circle at 42% 42%, rgba(38,35,93,0.95), transparent 68%);
+  opacity: 0.045; pointer-events: none; z-index: 0;
+  will-change: transform, opacity;
+  animation: blobFloat 14s ease-in-out infinite;
+}
+.ambient-blob-2 {
+  position: fixed; top: 54%; left: 6%; width: 380px; height: 380px;
+  border-radius: 50%; filter: blur(48px);
+  background: radial-gradient(circle at 50% 50%, rgba(222,27,84,0.95), transparent 66%);
+  opacity: 0; pointer-events: none; z-index: 0;
+  will-change: transform, opacity;
+}
+@keyframes blobFloat {
+  0%, 100% { transform: translate(0,0) scale(1); }
+  50%       { transform: translate(-14px,18px) scale(1.06); }
+}
+
+/* --- Reduced motion: skip all animations, show everything --- */
+@media (prefers-reduced-motion: reduce) {
+  .signal-rail { display: none; }
+  .ambient-blob-1, .ambient-blob-2 { display: none; }
+  body:not(.editing) [data-reveal] { opacity: 1 !important; transform: none !important; transition: none !important; }
+}
+@media (max-width: 560px) { .signal-rail { display: none; } }
+
+/* --- Block reveal (JS adds/removes .is-visible) --- */
+body:not(.editing) [data-reveal] {
+  opacity: 0; transform: translateY(42px);
+  transition: opacity .9s ease, transform 1s cubic-bezier(.22,.61,.36,1);
+  will-change: opacity, transform;
+}
+body:not(.editing) [data-reveal].is-visible {
+  opacity: 1; transform: none;
+}
+
+/* --- Premium learner canvas & lesson head typography --- */
+body:not(.editing) .canvas { max-width: 1040px; overflow-x: clip; }
+body:not(.editing) .lessonhead { padding: 80px 0 40px; margin-bottom: 0; }
+body:not(.editing) .lessonhead__kicker {
+  display: inline-flex; align-items: center; gap: 10px; margin-bottom: 26px;
+  font-size: 13px; letter-spacing: 0.18em; color: #DE1B54;
+}
+body:not(.editing) .lessonhead__kicker .dot { display: none; }
+body:not(.editing) .lessonhead__kicker::before {
+  content: ""; display: inline-block; width: 28px; height: 2px;
+  background: #DE1B54; border-radius: 2px; flex-shrink: 0;
+}
+body:not(.editing) .lessonhead h1 {
+  font-size: clamp(42px, 6.4vw, 72px); line-height: 1.02;
+  letter-spacing: -0.03em; max-width: 760px; color: #1D2230;
+}
+body:not(.editing) .lessonfoot__cta {
+  background: linear-gradient(135deg, #26235D, #1A1842);
+  border-radius: 14px; padding: 14px 26px;
+  font-size: 16px; font-weight: 600;
+  box-shadow: 0 12px 28px -12px rgba(38,35,93,0.6);
+}
+body:not(.editing) .lessonfoot__cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 34px -12px rgba(38,35,93,0.7);
+}
+
+/* --- Premium 3D flip cards --- */
+body:not(.editing) .flipgrid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+body:not(.editing) .flip { perspective: 1600px; height: 240px; }
+body:not(.editing) .flip__inner { transition: transform .8s cubic-bezier(.2,.7,.2,1); }
+body:not(.editing) .flip__face { border-radius: 22px; padding: 30px; justify-content: space-between; }
+body:not(.editing) .flip__front {
+  border: 1px solid rgba(29,34,48,0.07); background: #FFFFFF;
+  box-shadow: 0 1px 2px rgba(20,24,48,0.04), 0 18px 40px -24px rgba(20,24,48,0.22);
+}
+body:not(.editing) .flip__front::before { display: none; }
+body:not(.editing) .flip__icon { display: none; }
+body:not(.editing) .flip__title { font-size: 34px; font-weight: 800; letter-spacing: -0.02em; color: #1D2230; margin-top: 0; }
+body:not(.editing) .flip__hint { font-size: 12px; font-weight: 500; opacity: 0.4; margin-top: 8px; }
+body:not(.editing) .flip__hint svg { display: none; }
+body:not(.editing) .flip__back { background: linear-gradient(150deg, #26235D, #1A1842); box-shadow: 0 18px 40px -20px rgba(26,24,66,0.55); }
+body:not(.editing) .flip__kicker { font-size: 12px; font-weight: 700; letter-spacing: 0.16em; color: rgba(255,255,255,0.5); margin-bottom: 0; text-transform: uppercase; }
+body:not(.editing) .flip__backtitle { font-size: 13px; font-weight: 700; opacity: 0.8; margin-bottom: 4px; }
+body:not(.editing) .flip__back p { font-size: 19px; line-height: 1.5; font-weight: 500; color: #FFFFFF; }
+/* alternating magenta back */
+body:not(.editing) .flipgrid .flip:nth-child(even) .flip__back {
+  background: linear-gradient(150deg, #DE1B54, #b3133f);
+  box-shadow: 0 18px 40px -20px rgba(222,27,84,0.5);
+}
+
+/* --- Premium MCQ with A/B/C badge letters --- */
+body:not(.editing) .mcq {
+  border-radius: 26px; padding: clamp(28px, 4vw, 48px);
+  box-shadow: 0 1px 2px rgba(20,24,48,0.04), 0 30px 60px -40px rgba(20,24,48,0.30);
+  border: 1px solid rgba(29,34,48,0.07);
+}
+body:not(.editing) .mcq__q {
+  font-size: clamp(22px, 2.6vw, 28px); font-weight: 700;
+  letter-spacing: -0.01em; margin-bottom: 32px; line-height: 1.4;
+}
+body:not(.editing) .mc-opts { gap: 14px; }
+body:not(.editing) .mc-opt {
+  padding: 20px 24px; border-radius: 16px; border: 2px solid #E4E6EE;
+  font-size: 18px; font-weight: 500; color: #1D2230;
+  box-shadow: 0 1px 2px rgba(20,24,48,0.03);
+}
+body:not(.editing) .mc-opt:not(.is-answered):hover {
+  border-color: #26235D; background: rgba(38,35,93,0.04);
+}
+body:not(.editing) .mc-opt__radio {
+  width: 38px; height: 38px; min-width: 38px; border: none; border-radius: 50%;
+  background: #F0F1F6; color: #6B7280; font-size: 16px; font-weight: 700;
+  transition: all .3s ease; position: relative;
+}
+/* show badge letter via pseudo-element */
+body:not(.editing) .mc-opt__radio::before {
+  content: attr(data-letter);
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700;
+}
+body:not(.editing) .mc-opt.is-answered .mc-opt__radio::before { display: none; }
+body:not(.editing) .mc-opt.is-correct { border-color: #6CC049; background: rgba(108,192,73,0.08); }
+body:not(.editing) .mc-opt.is-correct .mc-opt__radio { background: #6CC049; color: #fff; }
+body:not(.editing) .mc-opt.is-wrong { border-color: #DE1B54; background: rgba(222,27,84,0.07); }
+body:not(.editing) .mc-opt.is-wrong .mc-opt__radio { background: #DE1B54; color: #fff; }
+body:not(.editing) .mc-opt.is-dim { opacity: 0.55; }
+body:not(.editing) .mc-fb.show {
+  padding: 14px 18px; border-radius: 12px; font-size: 17px; line-height: 1.55;
+  display: flex; align-items: flex-start; gap: 12px; margin-top: 26px; border-top: 1px solid rgba(29,34,48,0.07);
+  background: none;
+}
+body:not(.editing) .mc-fb.ok { color: #4f9e2f; }
+body:not(.editing) .mc-fb.no { color: #DE1B54; }

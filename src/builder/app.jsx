@@ -142,6 +142,80 @@ function App() {
   const [screen, setScreen] = useState('dashboard'); // 'dashboard' | 'builder'
   const [toastNode, toast] = useToast();
 
+  // --- premium learner-view motion system ---
+  const scrollRef   = useRef(null);
+  const progFillRef = useRef(null);
+  const progPctRef  = useRef(null);
+  const railFillRef = useRef(null);
+  const pulseRef    = useRef(null);
+  const pulseNodeRef= useRef(null);
+  const pulseTrailRef=useRef(null);
+  const blob1Ref    = useRef(null);
+  const blob2Ref    = useRef(null);
+
+  useEffect(() => {
+    if (editing || screen !== 'builder') return;
+    const el = scrollRef.current;
+    if (!el) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+    const CA = { r: 38, g: 35, b: 93 };   // #26235D
+    const CB = { r: 222, g: 27, b: 84 };  // #DE1B54
+    const mix = t => ({
+      r: Math.round(CA.r + (CB.r - CA.r) * t),
+      g: Math.round(CA.g + (CB.g - CA.g) * t),
+      b: Math.round(CA.b + (CB.b - CA.b) * t),
+    });
+    const rgb  = c => `rgb(${c.r},${c.g},${c.b})`;
+    const rgba = (c, a) => `rgba(${c.r},${c.g},${c.b},${a})`;
+
+    let lastY = 0, speed = 0, raf;
+    const tick = () => {
+      const y   = el.scrollTop;
+      const max = (el.scrollHeight - el.clientHeight) || 1;
+      const p   = clamp(y / max, 0, 1);
+      speed += (Math.abs(y - lastY) - speed) * 0.18;
+      lastY = y;
+      const sp = Math.min(speed / 34, 1);
+
+      // progress bar + percentage
+      if (progFillRef.current) progFillRef.current.style.width = (p * 100).toFixed(2) + '%';
+      if (progPctRef.current)  progPctRef.current.textContent  = Math.round(p * 100) + '%';
+
+      // signal rail
+      const railH = el.clientHeight;
+      const pulseY = p * railH;
+      if (pulseRef.current)     pulseRef.current.style.transform = `translate(-50%, ${pulseY.toFixed(1)}px)`;
+      if (railFillRef.current)  railFillRef.current.style.height  = pulseY.toFixed(1) + 'px';
+      const col = mix(clamp(0.25 + p * 0.55 + sp * 0.5, 0, 1));
+      if (pulseNodeRef.current) {
+        const scale = 0.62 + sp * 0.78;
+        pulseNodeRef.current.style.transform  = `scale(${scale.toFixed(3)})`;
+        pulseNodeRef.current.style.background = rgb(col);
+        pulseNodeRef.current.style.boxShadow  = `0 0 ${(10 + sp * 24).toFixed(0)}px ${(3 + sp * 5).toFixed(0)}px ${rgba(col, 0.5)}`;
+      }
+      if (pulseTrailRef.current) {
+        pulseTrailRef.current.style.opacity    = (sp * 0.85).toFixed(2);
+        pulseTrailRef.current.style.background = `linear-gradient(180deg, transparent, ${rgb(col)})`;
+      }
+
+      // ambient blobs
+      if (blob1Ref.current) {
+        blob1Ref.current.style.transform = `translate(${(-p * 150).toFixed(0)}px, ${(p * 60).toFixed(0)}px) scale(${(1 + p * 0.25).toFixed(3)})`;
+        blob1Ref.current.style.opacity   = (0.04 + p * 0.05).toFixed(3);
+      }
+      if (blob2Ref.current) {
+        blob2Ref.current.style.opacity   = (clamp((p - 0.58) / 0.42, 0, 1) * 0.08).toFixed(3);
+        blob2Ref.current.style.transform = `translate(${(p * 40).toFixed(0)}px, ${(-p * 50).toFixed(0)}px) scale(${(0.8 + p * 0.35).toFixed(3)})`;
+      }
+
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [editing, screen]);
+
   // autosave
   useEffect(() => { saveCourse(course); }, [course]);
   useEffect(() => { saveProgress(progress); }, [progress]);
@@ -301,27 +375,49 @@ function App() {
 
   // ---- builder screen ----
   return (
-    <div className="app">
-      <Sidebar course={course} currentView={view} completed={completed} editing={editing}
-        onNavigate={go} onAddLesson={addLesson} onAddSection={addSection} onRename={rename} onDelete={del} onReorder={reorder}
-        progressPct={progressPct} doneCount={doneCount} totalLessons={totalLessons}
-        onToggleEdit={() => setEditing(e => !e)} onImport={() => setShowImporter(true)}
-        onExportScorm={() => exportScorm(course)} />
-      <div className="main">
-        <header className="topbar">
-          <button className="topbar__menubtn" onClick={() => document.body.classList.toggle('nav-open')} aria-label="Menu"><Icon name="menu" /></button>
-          <button className="btn-ghost topbar__lib" onClick={backToLibrary}><Icon name="arrowLeft" size={14} /> Library</button>
-          <div className="topbar__crumb"><span dangerouslySetInnerHTML={{ __html: course.meta.title }}></span> <Icon name="arrowRight" size={13} /> <b dangerouslySetInnerHTML={{ __html: crumbTitle }}></b></div>
-          <span className="topbar__spacer"></span>
-          <span className={'topbar__badge ' + (editing ? 'edit' : 'learn')}>{editing ? 'Author mode' : 'Learner view'}</span>
-          {editing && <button className="btn-ghost" onClick={() => { if (confirm('Reset the whole course back to the blank template? This erases your content.')) { const d = defaultCourse(); setCourse(d); setProgress({ completed: {}, answers: {} }); go({ type: 'cover' }); toast('Course reset'); } }}><Icon name="reset" size={14} /> Reset template</button>}
-        </header>
-        <div className="scroll">{main}</div>
+    <React.Fragment>
+      {/* Signal rail — learner mode only, travels with scroll */}
+      {!editing && (
+        <div className="signal-rail" aria-hidden="true">
+          <div className="signal-rail__track"></div>
+          <div className="signal-rail__fill" ref={railFillRef}></div>
+          <div className="signal-rail__pulse" ref={pulseRef}>
+            <div className="signal-rail__trail" ref={pulseTrailRef}></div>
+            <div className="signal-rail__node" ref={pulseNodeRef}></div>
+          </div>
+        </div>
+      )}
+      {/* Ambient depth blobs — learner mode only */}
+      {!editing && <React.Fragment>
+        <div className="ambient-blob-1" ref={blob1Ref} aria-hidden="true"></div>
+        <div className="ambient-blob-2" ref={blob2Ref} aria-hidden="true"></div>
+      </React.Fragment>}
+
+      <div className="app">
+        <Sidebar course={course} currentView={view} completed={completed} editing={editing}
+          onNavigate={go} onAddLesson={addLesson} onAddSection={addSection} onRename={rename} onDelete={del} onReorder={reorder}
+          progressPct={progressPct} doneCount={doneCount} totalLessons={totalLessons}
+          onToggleEdit={() => setEditing(e => !e)} onImport={() => setShowImporter(true)}
+          onExportScorm={() => exportScorm(course)} />
+        <div className="main">
+          <header className="topbar" style={{ position: 'sticky', top: 0 }}>
+            {/* Scroll progress bar — learner mode */}
+            {!editing && <div className="scroll-prog"><div className="scroll-prog__fill" ref={progFillRef}></div></div>}
+            <button className="topbar__menubtn" onClick={() => document.body.classList.toggle('nav-open')} aria-label="Menu"><Icon name="menu" /></button>
+            <button className="btn-ghost topbar__lib" onClick={backToLibrary}><Icon name="arrowLeft" size={14} /> Library</button>
+            <div className="topbar__crumb"><span dangerouslySetInnerHTML={{ __html: course.meta.title }}></span> <Icon name="arrowRight" size={13} /> <b dangerouslySetInnerHTML={{ __html: crumbTitle }}></b></div>
+            <span className="topbar__spacer"></span>
+            {!editing && <span className="topbar__prog-pct" ref={progPctRef}>0%</span>}
+            <span className={'topbar__badge ' + (editing ? 'edit' : 'learn')}>{editing ? 'Author mode' : 'Learner view'}</span>
+            {editing && <button className="btn-ghost" onClick={() => { if (confirm('Reset the whole course back to the blank template? This erases your content.')) { const d = defaultCourse(); setCourse(d); setProgress({ completed: {}, answers: {} }); go({ type: 'cover' }); toast('Course reset'); } }}><Icon name="reset" size={14} /> Reset template</button>}
+          </header>
+          <div className="scroll" ref={scrollRef}>{main}</div>
+        </div>
+        {showImporter && <ImportModal onImport={importCourse} onClose={() => setShowImporter(false)} />}
+        <RichToolbar />
+        {toastNode}
       </div>
-      {showImporter && <ImportModal onImport={importCourse} onClose={() => setShowImporter(false)} />}
-      <RichToolbar />
-      {toastNode}
-    </div>
+    </React.Fragment>
   );
 }
 

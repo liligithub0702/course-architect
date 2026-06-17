@@ -468,7 +468,7 @@ function McqBlock({ block, editing, onChange, answer, onAnswer }) {
               <div key={o.id} className={cls} role="button" tabIndex={editing || answered ? -1 : 0}
                 onClick={() => { if (!editing && !answered) onAnswer(block.id, o.id); }}
                 onKeyDown={(e) => { if (!editing && !answered && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onAnswer(block.id, o.id); } }}>
-                <span className="mc-opt__radio">{answered && (isCorrect || o.id === chosen) && <Icon name={isCorrect ? 'check' : 'close'} size={13} />}</span>
+                <span className="mc-opt__radio" data-letter={'ABCDEFGH'[i]}>{answered && (isCorrect || o.id === chosen) && <Icon name={isCorrect ? 'check' : 'close'} size={13} />}</span>
                 <Editable tag="span" editing={editing} html={o.text} placeholder="Option text"
                   onCommit={(v) => setOpt(i, { text: v })} style={{ flex: 1 }} />
                 {editing && (
