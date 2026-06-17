@@ -462,7 +462,11 @@ function App() {
             )}
             <span className="topbar__spacer"></span>
             {!editing && <span className="topbar__prog-pct" ref={progPctRef}>0%</span>}
-            <span className={'topbar__badge ' + (editing ? 'edit' : 'learn')}>{editing ? 'Author mode' : 'Learner view'}</span>
+            {/* Edit/Preview toggle — always visible in topbar */}
+            <button className={'topbar__modetoggle' + (editing ? ' on' : '')} onClick={() => setEditing(e => !e)}>
+              <Icon name={editing ? 'eye' : 'edit'} size={14} />
+              {editing ? 'Preview' : 'Edit'}
+            </button>
             {editing && <button className="btn-export" onClick={() => exportScorm(course)}><Icon name="download" size={14} /> Export SCORM</button>}
             {editing && <button className="btn-ghost" onClick={() => { if (confirm('Reset the whole course back to the blank template? This erases your content.')) { const d = defaultCourse(); setCourse(d); setProgress({ completed: {}, answers: {} }); go({ type: 'cover' }); toast('Course reset'); } }}><Icon name="reset" size={14} /> Reset</button>}
           </header>

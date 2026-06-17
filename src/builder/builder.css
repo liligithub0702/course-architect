@@ -936,7 +936,10 @@ body:not(.editing) [data-reveal].is-visible {
 }
 
 /* --- Premium learner canvas & lesson head typography --- */
-body:not(.editing) .canvas { max-width: 1040px; overflow-x: clip; }
+body:not(.editing) .canvas { max-width: 1040px; overflow-x: clip; padding-left: 56px; }
+/* Full-width layout when sidebar is fixed overlay in learner mode */
+body:not(.editing) .app { display: block; }
+body:not(.editing) .main { width: 100%; }
 body:not(.editing) .lessonhead { padding: 80px 0 40px; margin-bottom: 0; }
 body:not(.editing) .lessonhead__kicker {
   display: inline-flex; align-items: center; gap: 10px; margin-bottom: 26px;
@@ -1065,9 +1068,20 @@ body:not(.editing) .navitem.is-active::before { background: #DE1B54; }
 body:not(.editing) .navitem__check { border-color: rgba(38,35,93,0.18); color: #6B7280; }
 body:not(.editing) .navitem.is-done .navitem__check { background: #26235D; border-color: #26235D; color: #fff; }
 body:not(.editing) .sidebar__foot { border-top-color: rgba(29,34,48,0.06); }
-body:not(.editing) .edittoggle { display: none; }
+body:not(.editing) .edittoggle { display: none; } /* moved to topbar */
 body:not(.editing) .sidebar__addrow,
 body:not(.editing) .sidebar__importrow { display: none; }
+
+/* Mode toggle button in topbar (replaces sidebar edittoggle) */
+.topbar__modetoggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: 1.5px solid var(--line-strong);
+  color: var(--ink-soft); border-radius: 9px; padding: 6px 13px;
+  font-size: 13px; font-weight: 700; cursor: pointer; transition: all .14s;
+  font-family: inherit; white-space: nowrap;
+}
+.topbar__modetoggle:hover { border-color: var(--indigo); color: var(--indigo); background: var(--canvas); }
+.topbar__modetoggle.on { background: color-mix(in srgb, var(--blue) 12%, #fff); border-color: var(--blue); color: var(--blue); }
 
 /* Backdrop / scrim in learner mode */
 body:not(.editing) .sidebar__scrim {
