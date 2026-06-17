@@ -4,7 +4,7 @@
 
 function Sidebar({ course, currentView, completed, editing, onNavigate,
                    onAddLesson, onAddSection, onRename, onDelete, onReorder,
-                   progressPct, doneCount, totalLessons, onToggleEdit, onImport }) {
+                   progressPct, doneCount, totalLessons, onToggleEdit, onImport, onExportScorm }) {
   const [renaming, setRenaming] = useState(null);
   const [tmp, setTmp] = useState('');
   const [dragId, setDragId] = useState(null);
@@ -110,6 +110,13 @@ function Sidebar({ course, currentView, completed, editing, onNavigate,
             <div className="sidebar__importrow">
               <button className="sidebar__importbtn" onClick={onImport}>
                 <Icon name="upload" size={14} /> Import outline
+              </button>
+            </div>
+          )}
+          {editing && (
+            <div className="sidebar__importrow">
+              <button className="sidebar__importbtn" onClick={onExportScorm}>
+                <Icon name="download" size={14} /> Export SCORM 1.2
               </button>
             </div>
           )}

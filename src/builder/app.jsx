@@ -305,7 +305,8 @@ function App() {
       <Sidebar course={course} currentView={view} completed={completed} editing={editing}
         onNavigate={go} onAddLesson={addLesson} onAddSection={addSection} onRename={rename} onDelete={del} onReorder={reorder}
         progressPct={progressPct} doneCount={doneCount} totalLessons={totalLessons}
-        onToggleEdit={() => setEditing(e => !e)} onImport={() => setShowImporter(true)} />
+        onToggleEdit={() => setEditing(e => !e)} onImport={() => setShowImporter(true)}
+        onExportScorm={() => exportScorm(course)} />
       <div className="main">
         <header className="topbar">
           <button className="topbar__menubtn" onClick={() => document.body.classList.toggle('nav-open')} aria-label="Menu"><Icon name="menu" /></button>

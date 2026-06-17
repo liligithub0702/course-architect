@@ -31,5 +31,6 @@ await import('./builder/importer.jsx')
 await import('./builder/library.jsx')
 await import('./builder/cloud.jsx')
 await import('./builder/dashboard.jsx')
+await import('./builder/scorm-export.jsx')
 await import('./builder/gate.jsx')
 await import('./builder/app.jsx') // this one renders the app
