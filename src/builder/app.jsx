@@ -152,6 +152,8 @@ function App() {
   const pulseTrailRef=useRef(null);
   const blob1Ref    = useRef(null);
   const blob2Ref    = useRef(null);
+  // hero parallax refs (assigned dynamically per lesson render — we read from DOM)
+  const heroPrevY   = useRef(0);
 
   useEffect(() => {
     if (editing || screen !== 'builder') return;
@@ -209,6 +211,31 @@ function App() {
         blob2Ref.current.style.opacity   = (clamp((p - 0.58) / 0.42, 0, 1) * 0.08).toFixed(3);
         blob2Ref.current.style.transform = `translate(${(p * 40).toFixed(0)}px, ${(-p * 50).toFixed(0)}px) scale(${(0.8 + p * 0.35).toFixed(3)})`;
       }
+
+      // hero parallax: lesson head fades/slides as user scrolls past it
+      const lessonHead = el.querySelector('.lessonhead');
+      if (lessonHead) {
+        const hh = lessonHead.offsetHeight + 80;
+        const t = clamp(y / hh, 0, 1);
+        if (y > 1) {
+          lessonHead.style.transform = `translateY(${(-y * 0.18).toFixed(1)}px)`;
+          lessonHead.style.opacity   = clamp(1 - t * 1.6, 0, 1).toFixed(3);
+        } else {
+          lessonHead.style.transform = '';
+          lessonHead.style.opacity   = '1';
+        }
+      }
+
+      // timeline draw-in: .stepper tracks entering viewport get .timeline-drawn
+      el.querySelectorAll('.stepper:not(.timeline-drawn)').forEach(st => {
+        const r = st.getBoundingClientRect();
+        if (r.top < window.innerHeight * 0.82) st.classList.add('timeline-drawn');
+      });
+      // and remove on scroll-back above viewport
+      el.querySelectorAll('.stepper.timeline-drawn').forEach(st => {
+        const r = st.getBoundingClientRect();
+        if (r.bottom < 0) st.classList.remove('timeline-drawn');
+      });
 
       raf = requestAnimationFrame(tick);
     };
@@ -406,9 +433,26 @@ function App() {
           <header className="topbar" style={{ position: 'sticky', top: 0 }}>
             {/* Scroll progress bar — learner mode */}
             {!editing && <div className="scroll-prog"><div className="scroll-prog__fill" ref={progFillRef}></div></div>}
+            {/* Hamburger — learner mode (CSS hides in author mode) */}
             <button className="topbar__menubtn" onClick={() => document.body.classList.toggle('nav-open')} aria-label="Menu"><Icon name="menu" /></button>
-            <button className="btn-ghost topbar__lib" onClick={backToLibrary}><Icon name="arrowLeft" size={14} /> Library</button>
-            <div className="topbar__crumb"><span dangerouslySetInnerHTML={{ __html: course.meta.title }}></span> <Icon name="arrowRight" size={13} /> <b dangerouslySetInnerHTML={{ __html: crumbTitle }}></b></div>
+            {editing && <button className="btn-ghost topbar__lib" onClick={backToLibrary}><Icon name="arrowLeft" size={14} /> Library</button>}
+            <div className="topbar__crumb"><span dangerouslySetInnerHTML={{ __html: course.meta.title }}></span> {editing && <React.Fragment><Icon name="arrowRight" size={13} /> <b dangerouslySetInnerHTML={{ __html: crumbTitle }}></b></React.Fragment>}</div>
+            {/* Segmented lesson bar — learner mode */}
+            {!editing && (
+              <div className="topbar__segments">
+                {lessons.map(l => {
+                  const isDone = completed[l.id];
+                  const isCurrent = view.type === 'lesson' && view.id === l.id;
+                  return (
+                    <div key={l.id}
+                      className={'topbar__seg' + (isDone ? ' done' : '') + (isCurrent && !isDone ? ' current' : '')}
+                      title={l.title}
+                      onClick={() => go({ type: 'lesson', id: l.id })}
+                    />
+                  );
+                })}
+              </div>
+            )}
             <span className="topbar__spacer"></span>
             {!editing && <span className="topbar__prog-pct" ref={progPctRef}>0%</span>}
             <span className={'topbar__badge ' + (editing ? 'edit' : 'learn')}>{editing ? 'Author mode' : 'Learner view'}</span>
