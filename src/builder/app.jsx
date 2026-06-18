@@ -512,9 +512,32 @@ function App() {
   );
 }
 
+/* ---------- error boundary (catches render crashes → shows message instead of blank) ---------- */
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { err: null }; }
+  static getDerivedStateFromError(err) { return { err }; }
+  render() {
+    if (this.state.err) {
+      return (
+        <div style={{ fontFamily: 'sans-serif', padding: 40, maxWidth: 540, margin: '80px auto' }}>
+          <h2 style={{ color: '#c0392b' }}>Something went wrong</h2>
+          <pre style={{ background: '#f8f8f8', padding: 16, borderRadius: 6, fontSize: 13, overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+            {this.state.err.message || String(this.state.err)}
+          </pre>
+          <button onClick={() => { localStorage.clear(); location.reload(); }}
+            style={{ marginTop: 16, padding: '10px 20px', background: '#2E79BB', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 14 }}>
+            Clear storage &amp; reload
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // reuse one root so hot-reload doesn't create it twice
 if (!window.__caRoot) window.__caRoot = ReactDOM.createRoot(document.getElementById('root'));
-window.__caRoot.render(<Gate><App /></Gate>);
+window.__caRoot.render(<ErrorBoundary><Gate><App /></Gate></ErrorBoundary>);
 
 
 export {}; // marks this file as an ES module for Vite
