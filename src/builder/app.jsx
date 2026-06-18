@@ -260,6 +260,36 @@ function App() {
     return () => cancelAnimationFrame(id);
   }, [view]);
 
+  // --- browser back button: push state on view changes, intercept popstate ---
+  useEffect(() => {
+    if (screen !== 'builder') return;
+    window.history.pushState({ view, screen: 'builder' }, '');
+  }, [view, screen]);
+
+  useEffect(() => {
+    function onPop(e) {
+      const state = e.state;
+      if (!state || state.screen !== 'builder') return;
+      // Intercept: navigate to previous lesson rather than letting browser leave
+      e.preventDefault && e.preventDefault();
+      if (view.type === 'lesson') {
+        const li = lessonIndex(view.id);
+        if (li > 0) {
+          go({ type: 'lesson', id: lessons[li - 1].id });
+        } else {
+          go({ type: 'cover' });
+        }
+      } else if (view.type === 'complete') {
+        go({ type: 'lesson', id: lessons[lessons.length - 1]?.id || '' });
+      } else {
+        // cover — push state again so next back still stays in builder
+        window.history.pushState({ view, screen: 'builder' }, '');
+      }
+    }
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, [view, screen, lessons]);
+
   /* ---- dashboard <-> builder navigation ---- */
   function openFromLibrary(entry) {
     setCourse(JSON.parse(JSON.stringify(entry.course)));
@@ -444,7 +474,7 @@ function App() {
             {!editing && <div className="scroll-prog"><div className="scroll-prog__fill" ref={progFillRef}></div></div>}
             {/* Hamburger — learner mode (CSS hides in author mode) */}
             <button className="topbar__menubtn" onClick={() => document.body.classList.toggle('nav-open')} aria-label="Menu"><Icon name="menu" /></button>
-            {editing && <button className="btn-ghost topbar__lib" onClick={backToLibrary}><Icon name="arrowLeft" size={14} /> Library</button>}
+            {editing && <button className="btn-lib-exit topbar__lib" onClick={backToLibrary} title="Save and return to course library"><Icon name="arrowLeft" size={14} /> ← Library</button>}
             <div className="topbar__crumb"><span dangerouslySetInnerHTML={{ __html: course.meta.title }}></span> {editing && <React.Fragment><Icon name="arrowRight" size={13} /> <b dangerouslySetInnerHTML={{ __html: crumbTitle }}></b></React.Fragment>}</div>
             {/* Segmented lesson bar — learner mode */}
             {!editing && (

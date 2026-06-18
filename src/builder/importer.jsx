@@ -111,13 +111,23 @@ async function convertWithAI(text, password, onStatus) {
   return freshIds(parsed);
 }
 
-/* ---- plain-text extract from .docx via mammoth ---- */
+/* ---- plain-text extract from .docx / .xlsx via mammoth / SheetJS ---- */
 async function extractText(file) {
   if (file.name.endsWith('.docx')) {
     if (!window.mammoth) throw new Error('mammoth.js not loaded — check your internet connection.');
     const buf = await file.arrayBuffer();
     const result = await window.mammoth.extractRawText({ arrayBuffer: buf });
     return result.value;
+  }
+  if (file.name.endsWith('.xlsx')) {
+    if (!window.XLSX) throw new Error('SheetJS not loaded — check your internet connection.');
+    const buf = await file.arrayBuffer();
+    const wb = window.XLSX.read(buf, { type: 'array' });
+    // Concatenate all sheets as tab-separated text
+    return wb.SheetNames.map(name => {
+      const ws = wb.Sheets[name];
+      return '=== Sheet: ' + name + ' ===\n' + window.XLSX.utils.sheet_to_csv(ws);
+    }).join('\n\n');
   }
   return file.text();
 }
@@ -268,10 +278,10 @@ Supported formats:
                     <>
                       <Icon name="upload" size={28} />
                       <p><strong>Drop your outline here</strong> or click to browse</p>
-                      <p className="imp-drop__sub">.docx · .txt · .md</p>
+                      <p className="imp-drop__sub">.docx · .xlsx · .txt · .md</p>
                     </>
                   )}
-                  <input ref={fileRef} type="file" accept=".docx,.txt,.md" hidden
+                  <input ref={fileRef} type="file" accept=".docx,.xlsx,.txt,.md" hidden
                     onChange={e => handleFile(e.target.files && e.target.files[0])} />
                 </div>
                 {fileName && (

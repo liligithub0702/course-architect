@@ -1147,3 +1147,78 @@ body:not(.editing) .stepper.timeline-drawn .stepper__track { transform: scaleY(1
 
 /* Hero parallax: title and para have will-change set by JS */
 body:not(.editing) .lessonhead__parallax { will-change: opacity, transform; }
+
+/* ============================================================
+   EXIT LIBRARY BUTTON — prominent, distinct from other actions
+   ============================================================ */
+.btn-lib-exit {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0 16px; height: 36px; border-radius: 10px; border: none;
+  background: var(--indigo); color: #fff;
+  font-size: 13px; font-weight: 700; letter-spacing: .02em;
+  cursor: pointer; transition: background .15s, box-shadow .15s;
+  box-shadow: 0 2px 8px rgba(38,35,93,.35);
+  white-space: nowrap;
+}
+.btn-lib-exit:hover { background: #1A1842; box-shadow: 0 4px 14px rgba(38,35,93,.45); }
+
+/* ============================================================
+   REVIEW / COMMENT PANEL (edit mode only)
+   ============================================================ */
+.review-panel { margin-top: 8px; border-top: 1px solid var(--line); padding-top: 8px; }
+
+.review-toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 8px; border: 1px solid var(--line);
+  background: #fff; color: var(--gray); font-size: 12.5px; font-weight: 600;
+  cursor: pointer; transition: border-color .15s, color .15s;
+}
+.review-toggle:hover { border-color: var(--blue); color: var(--blue); }
+.review-toggle.has-items { border-color: var(--orange); color: var(--orange); background: color-mix(in srgb, var(--orange) 8%, #fff); }
+.review-toggle.open { border-color: var(--blue); color: var(--blue); background: color-mix(in srgb, var(--blue) 8%, #fff); }
+
+.review-panel__body {
+  margin-top: 10px; background: var(--canvas); border-radius: var(--radius-sm);
+  padding: 12px; display: flex; flex-direction: column; gap: 10px;
+  border: 1px solid var(--line);
+}
+
+.review-item {
+  background: #fff; border-radius: 8px; padding: 10px 12px;
+  border: 1px solid var(--line);
+}
+.review-item__text { font-size: 13.5px; color: var(--ink); margin: 0 0 6px; white-space: pre-wrap; }
+.review-item__meta {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11.5px; color: var(--gray);
+}
+.review-item__meta button { background: none; border: none; cursor: pointer; color: var(--gray); padding: 2px 4px; border-radius: 4px; }
+.review-item__meta button:hover { color: var(--wrong); }
+
+.review-compose { display: flex; gap: 8px; align-items: flex-end; }
+.review-compose__input {
+  flex: 1; min-height: 64px; padding: 8px 10px; border-radius: 8px;
+  border: 1px solid var(--line); font-family: var(--font); font-size: 13px; resize: vertical;
+  background: #fff; color: var(--ink);
+}
+.review-compose__input:focus { outline: none; border-color: var(--blue); }
+.review-compose__send {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 8px 14px; border-radius: 8px; border: none;
+  background: var(--blue); color: #fff; font-size: 13px; font-weight: 600;
+  cursor: pointer; white-space: nowrap; transition: background .15s;
+}
+.review-compose__send:hover { background: #1f5d9e; }
+.review-compose__send:disabled { opacity: .45; cursor: default; }
+
+/* ============================================================
+   IMAGE SIZE CONTROLS
+   ============================================================ */
+.img-size-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.img-size-btn {
+  padding: 5px 12px; border-radius: 8px; border: 1px solid var(--line);
+  background: #fff; color: var(--ink-soft); font-size: 12.5px; font-weight: 600;
+  cursor: pointer; transition: border-color .12s, color .12s, background .12s;
+}
+.img-size-btn:hover { border-color: var(--blue); color: var(--blue); }
+.img-size-btn.on { border-color: var(--blue); background: color-mix(in srgb, var(--blue) 12%, #fff); color: var(--blue); }

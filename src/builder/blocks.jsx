@@ -117,8 +117,16 @@ function TextBlock({ block, editing, onChange }) {
 /* ============================================================
    IMAGE
    ============================================================ */
+const IMG_SIZE_PRESETS = [
+  { label: 'Small (40%)',  value: '40%' },
+  { label: 'Medium (65%)', value: '65%' },
+  { label: 'Large (85%)',  value: '85%' },
+  { label: 'Full width',   value: '100%' },
+];
+
 function ImageBlock({ block, editing, onChange }) {
   const fileRef = useRef(null);
+  const imgWidth = block.imgWidth || '100%';
   function onFile(e) {
     const f = e.target.files && e.target.files[0];
     if (!f) return;
@@ -128,9 +136,9 @@ function ImageBlock({ block, editing, onChange }) {
   }
   return (
     <div className="blk-image">
-      <figure>
+      <figure style={{ maxWidth: imgWidth, margin: imgWidth === '100%' ? undefined : '0 auto' }}>
         {block.src
-          ? <img src={block.src} alt={block.alt || ''} />
+          ? <img src={block.src} alt={block.alt || ''} style={{ width: '100%' }} />
           : <div className="img-placeholder"><Icon name="image" size={30} />{editing ? 'Add an image below' : 'No image'}</div>}
         {(block.caption || editing) && (
           <Editable tag="figcaption" editing={editing} html={block.caption} placeholder="Caption (optional)"
@@ -157,6 +165,27 @@ function ImageBlock({ block, editing, onChange }) {
             <span className="field__lab">Alt text (accessibility)</span>
             <input className="inp" value={block.alt} placeholder="Describe the image"
               onChange={(e) => onChange({ ...block, alt: e.target.value })} />
+          </div>
+          <div className="field">
+            <span className="field__lab">Image size</span>
+            <div className="img-size-row">
+              {IMG_SIZE_PRESETS.map(p => (
+                <button key={p.value} type="button"
+                  className={'img-size-btn' + (imgWidth === p.value ? ' on' : '')}
+                  onClick={() => onChange({ ...block, imgWidth: p.value })}>
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+              <span className="field__lab" style={{ margin: 0, whiteSpace: 'nowrap' }}>Custom %</span>
+              <input className="inp" type="number" min="10" max="100" style={{ width: 80 }}
+                value={parseInt(imgWidth, 10) || 100}
+                onChange={(e) => {
+                  const v = Math.min(100, Math.max(10, parseInt(e.target.value, 10) || 100));
+                  onChange({ ...block, imgWidth: v + '%' });
+                }} />
+            </div>
           </div>
         </div>
       )}

@@ -45,6 +45,57 @@ function Inserter({ onClick, big }) {
   );
 }
 
+/* ---------- review / comment panel (edit mode only) ---------- */
+function ReviewPanel({ block, onChange }) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState('');
+  const reviews = block.reviews || [];
+
+  function addReview() {
+    const text = draft.trim();
+    if (!text) return;
+    const updated = [...reviews, { id: uid('rv'), text, ts: new Date().toISOString() }];
+    onChange({ ...block, reviews: updated });
+    setDraft('');
+  }
+
+  function delReview(id) {
+    onChange({ ...block, reviews: reviews.filter(r => r.id !== id) });
+  }
+
+  return (
+    <div className="review-panel">
+      <button type="button" className={'review-toggle' + (open ? ' open' : '') + (reviews.length ? ' has-items' : '')}
+        onClick={() => setOpen(o => !o)}>
+        <Icon name="quote" size={13} />
+        {reviews.length > 0 ? reviews.length + ' comment' + (reviews.length !== 1 ? 's' : '') : 'Add comment'}
+        <Icon name={open ? 'up' : 'down'} size={12} />
+      </button>
+      {open && (
+        <div className="review-panel__body">
+          {reviews.map(r => (
+            <div className="review-item" key={r.id}>
+              <p className="review-item__text">{r.text}</p>
+              <div className="review-item__meta">
+                <span>{new Date(r.ts).toLocaleString()}</span>
+                <button type="button" onClick={() => delReview(r.id)} aria-label="Delete comment"><Icon name="trash" size={12} /></button>
+              </div>
+            </div>
+          ))}
+          <div className="review-compose">
+            <textarea className="review-compose__input" value={draft} placeholder="Leave a comment or feedback…"
+              onChange={e => setDraft(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) addReview(); }} />
+            <button type="button" className="review-compose__send" onClick={addReview} disabled={!draft.trim()}>
+              <Icon name="arrowRight" size={14} /> Post
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ---------- block wrapper with author controls ---------- */
 function BlockShell({ block, index, total, editing, onChange, onMove, onDuplicate, onRemove, answer, onAnswer }) {
   const label = (BLOCK_LIBRARY.find(b => b.type === block.type) || {}).label || block.type;
@@ -64,6 +115,7 @@ function BlockShell({ block, index, total, editing, onChange, onMove, onDuplicat
       <div className="block-body">
         <BlockBody block={block} editing={editing} onChange={onChange} answer={answer} onAnswer={onAnswer} />
       </div>
+      {editing && <ReviewPanel block={block} onChange={onChange} />}
     </div>
   );
 }
