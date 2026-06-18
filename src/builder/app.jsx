@@ -155,6 +155,14 @@ function App() {
   // hero parallax refs (assigned dynamically per lesson render — we read from DOM)
   const heroPrevY   = useRef(0);
 
+  // Derived values — must be declared before any useEffect that references them
+  const lessons = course.lessons.filter(l => l.kind === 'lesson');
+  const totalLessons = lessons.length;
+  const completed = progress.completed || {};
+  const doneCount = lessons.filter(l => completed[l.id]).length;
+  const progressPct = totalLessons ? Math.round((doneCount / totalLessons) * 100) : 0;
+  const accent = accentColor(course.meta.accent);
+
   useEffect(() => {
     if (editing || screen !== 'builder') return;
     const el = scrollRef.current;
@@ -311,13 +319,6 @@ function App() {
       .catch(e => toast('Save failed: ' + e.message));
     setScreen('dashboard');
   }
-
-  const lessons = course.lessons.filter(l => l.kind === 'lesson');
-  const totalLessons = lessons.length;
-  const completed = progress.completed || {};
-  const doneCount = lessons.filter(l => completed[l.id]).length;
-  const progressPct = totalLessons ? Math.round((doneCount / totalLessons) * 100) : 0;
-  const accent = accentColor(course.meta.accent);
 
   // score across graded activities (mcq + matching + classify)
   const score = (() => {
