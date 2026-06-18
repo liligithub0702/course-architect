@@ -5,10 +5,10 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Course Architect</title>
-    <!-- mammoth: reads .docx files for the outline importer -->
-    <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
-    <!-- SheetJS: reads .xlsx files for the outline importer -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- mammoth: reads .docx files for the outline importer (async = non-blocking) -->
+    <script async src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
+    <!-- SheetJS: reads .xlsx files for the outline importer (async = non-blocking) -->
+    <script async src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   </head>
   <body>
     <div id="root"></div>
