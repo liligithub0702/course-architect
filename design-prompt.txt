@@ -1,0 +1,2102 @@
+I'm building a course authoring tool (like Articulate Rise) in React + Vite.
+The app has two modes driven by a `body.editing` CSS class:
+- **Edit mode** (`body.editing`): author builds content — toolbars, edit panels, inline editing
+- **Learner/preview mode** (no `.editing` class): polished, premium presentation for learners
+
+The design system:
+- Font: Hanken Grotesk (loaded from Google Fonts)
+- Brand colours: Indigo #26235D · Magenta #DE1B54 · Blue #2E79BB · Orange #F99F42 · Green #6CC049
+- Dark deep-indigo sidebar in edit mode; white collapsible overlay in learner mode
+- Scroll-driven signal rail and ambient blobs already wired up in JS
+
+What's already done for learner mode:
+- **Flip cards**: 3D premium cards, large type, alternating indigo/magenta backs
+- **MCQ**: rounded card with A/B/C badge letters, large type, smooth feedback
+- **Lesson head**: oversized hero typography (clamp 42–72px), reveal animations
+- **Sidebar**: white overlay with subtle borders
+
+What I need you to do:
+Apply the same premium learner-mode treatment (as `body:not(.editing)` overrides) to ALL the remaining block types that currently have no special learner styling:
+- **Heading** (`.blk-heading h2`, `.blk-heading h3`, `.eyebrow`)
+- **Text** (`.blk-text`) — larger reading type, generous line-height
+- **Statement / callout / quote** (`.statement`, `.statement.callout`, `.statement.quote`)
+- **Image** (`.blk-image img`, `.img-placeholder`) — full-bleed feel, subtle shadow
+- **Embed / video** (`.embed-frame`, `.embed-caption`)
+- **Tabs** (`.tabs__list`, `.tab`, `.tabpanel`)
+- **Accordion** (`.acc`, `.acc__head`, `.acc__body`, `.acc__content`)
+- **Process steps / stepper** (`.bx-tstep`, `.bx-tdetail`, `.bx-timeline`)
+- **Hotspots** (`.bx-hsflow`, `.bx-hsbtn`, `.bx-hsinfo`)
+- **Glossary** (`.bx-glist`, `.bx-term`)
+- **Matching** (`.bx-kc`, `.bx-mrow`, `.bx-select`)
+- **Classify** (`.bx-kc`, `.bx-citem`, `.bx-cfb`)
+- **Divider** (`.blk-divider hr`)
+- **Lesson footer** (`.lessonfoot`, `.lessonfoot__cta`) — already partially done, refine
+
+Design direction for the learner overrides:
+- Same premium feel as the existing flip card and MCQ overrides: spacious padding, large confident type, soft shadows `0 1px 2px rgba(20,24,48,.04), 0 30px 60px -40px rgba(20,24,48,.20)`
+- Cards/containers: border-radius 20–26px, border `1px solid rgba(29,34,48,.07)`, white background
+- Text blocks: font-size 19–20px, line-height 1.72, color `#3a4055`
+- Headings: h2 clamp(26px, 3.2vw, 36px), h3 clamp(21px, 2.4vw, 27px), weight 800, letter-spacing -0.02em
+- Eyebrow: keep the magenta + extending line (`::after`) already in the CSS
+- Statement callout: left border 4px solid accent, background very light tint of accent, border-radius 20px, bigger padding
+- Statement quote: large opening quote glyph, italic, generous size ~22–24px
+- Tabs: pill-shaped tabs, active tab = indigo filled; tab panel clean white card
+- Accordion: larger row padding, left accent marker stays, smooth open/close
+- Stepper: larger step dots (56px), stronger active colour, timeline line draws in (already wired)
+- Hotspots: bigger nodes (68px), softer background, info panel with left accent border
+- Glossary: clean 2-column cards, term in indigo 800 weight, definition in #4a5161
+- Matching + Classify: knowledge-check card same premium radius/shadow as MCQ
+- Divider: faint line, `rgba(29,34,48,.08)`, more breathing room above/below
+
+Rules:
+1. Output only the CSS additions/overrides — do NOT rewrite or duplicate the existing rules, only add new `body:not(.editing)` selectors (and any needed keyframes/variables)
+2. Keep every existing class name exactly as-is
+3. Do not touch edit-mode styles (no bare selectors that would affect `.editing` body)
+4. Mobile: ensure blocks still look good at 375px width
+5. The result should feel like one coherent premium design system, not a patchwork
+
+Here is the current complete CSS file:
+
+===== builder.css =====
+/* ============================================================
+   Course Builder — brand styles + authoring UI
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap');
+
+:root {
+  --indigo: #26235D;
+  --indigo-deep: #1A1842;
+  --magenta: #DE1B54;
+  --blue: #2E79BB;
+  --orange: #F99F42;
+  --green: #6CC049;
+  --slate: #2C3546;
+  --gray: #6E797C;
+  --gray-light: #C5C7C5;
+
+  --ink: #1d2230;
+  --ink-soft: #4a5161;
+  --paper: #ffffff;
+  --canvas: #f4f5f8;
+  --canvas-2: #eceef3;
+  --line: #e2e5ec;
+  --line-strong: #cfd3dd;
+
+  --correct: #1f9d57;
+  --correct-bg: #e8f7ee;
+  --wrong: #d63452;
+  --wrong-bg: #fdebef;
+
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-lg: 24px;
+  --shadow-sm: 0 1px 2px rgba(28,34,48,.06), 0 2px 8px rgba(28,34,48,.05);
+  --shadow-md: 0 4px 14px rgba(28,34,48,.08), 0 10px 34px rgba(28,34,48,.07);
+  --shadow-lg: 0 18px 50px rgba(26,24,66,.18);
+
+  --sidebar-w: 312px;
+  --accent: var(--indigo);
+  --font: 'Hanken Grotesk', 'Arial', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  font-family: var(--font);
+  color: var(--ink);
+  background: var(--canvas);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+h1,h2,h3,h4 { line-height: 1.14; margin: 0; letter-spacing: -0.02em; font-weight: 800; }
+p { margin: 0 0 1em; text-wrap: pretty; }
+p:last-child { margin-bottom: 0; }
+button { font-family: inherit; }
+::selection { background: color-mix(in srgb, var(--accent) 22%, #fff); }
+
+/* ============================================================
+   APP SHELL
+   ============================================================ */
+.app { display: flex; min-height: 100vh; }
+
+/* -------- Sidebar -------- */
+.sidebar {
+  width: var(--sidebar-w); flex: none;
+  background: linear-gradient(180deg, #1A1842 0%, #211F4E 100%);
+  color: #fff;
+  display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh;
+  border-right: 1px solid rgba(255,255,255,.06);
+  box-shadow: 4px 0 24px rgba(26,24,66,.18);
+}
+.sidebar__head {
+  padding: 24px 22px 20px; border-bottom: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.03);
+}
+.sidebar__logo { height: 26px; width: auto; display: block; margin-bottom: 18px; }
+.sidebar__wordmark {
+  display: block; font-size: 13px; font-weight: 800; letter-spacing: .12em;
+  text-transform: uppercase; color: rgba(255,255,255,.4); margin-bottom: 14px;
+}
+.sidebar__home { display: block; width: 100%; text-align: left; background: none; border: none; cursor: pointer; padding: 0; }
+.sidebar__title { display: block; font-size: 16.5px; font-weight: 800; letter-spacing: -.02em; color: #fff; line-height: 1.25; }
+.sidebar__sub { display: block; font-size: 12px; color: rgba(255,255,255,.5); margin-top: 5px; font-weight: 600; letter-spacing: .02em; }
+.sidebar__home:hover .sidebar__sub { color: rgba(255,255,255,.85); }
+
+.sidebar__progress { padding: 14px 22px 16px; border-bottom: 1px solid rgba(255,255,255,.1); }
+.sidebar__ptrack { height: 6px; background: rgba(255,255,255,.14); border-radius: 99px; overflow: hidden; }
+.sidebar__pfill { height: 100%; background: linear-gradient(90deg, var(--blue), var(--magenta)); border-radius: 99px; transition: width .4s cubic-bezier(.4,0,.2,1); }
+.sidebar__pmeta { display: flex; justify-content: space-between; font-size: 11.5px; color: rgba(255,255,255,.62); margin-top: 8px; font-weight: 600; letter-spacing: .02em; }
+
+.lessonlist { flex: 1; overflow-y: auto; padding: 12px 14px 24px; }
+.lessonlist::-webkit-scrollbar { width: 8px; }
+.lessonlist::-webkit-scrollbar-thumb { background: rgba(255,255,255,.16); border-radius: 8px; }
+
+.navsection {
+  font-size: 10.5px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase;
+  color: rgba(255,255,255,.35); padding: 20px 14px 7px; display: flex; align-items: center; gap: 8px;
+}
+.navsection:first-child { padding-top: 10px; }
+.navsection__edit { display: flex; align-items: center; gap: 8px; }
+
+.navitem {
+  display: flex; align-items: center; gap: 11px;
+  width: 100%; text-align: left; border: none; background: none; cursor: pointer;
+  color: rgba(255,255,255,.72); font-family: inherit; font-size: 13.5px; font-weight: 600;
+  padding: 10px 14px; border-radius: 10px; transition: background .14s, color .14s;
+  position: relative;
+}
+.navitem:hover { background: rgba(255,255,255,.07); color: #fff; }
+.navitem.is-active { background: rgba(222,27,84,.16); color: #fff; border: 1px solid rgba(222,27,84,.22); }
+.navitem.is-active::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 0 2px 2px 0; background: var(--magenta); }
+.navitem__check {
+  width: 22px; height: 22px; flex: none; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.28); display: grid; place-items: center; transition: all .2s;
+}
+.navitem.is-done .navitem__check { background: var(--green); border-color: var(--green); color: #fff; }
+.navitem.is-locked { opacity: .42; }
+.navitem__label { flex: 1; line-height: 1.3; }
+.navitem__drag { opacity: 0; color: rgba(255,255,255,.5); cursor: grab; transition: opacity .14s; }
+.navitem:hover .navitem__drag { opacity: 1; }
+.navitem.dragging { opacity: .4; }
+.navitem.dragover { box-shadow: inset 0 2px 0 var(--magenta); }
+
+.sidebar__addrow { padding: 10px 14px 4px; display: flex; gap: 8px; }
+.sidebar__addbtn {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
+  background: rgba(255,255,255,.08); color: #fff; border: 1px dashed rgba(255,255,255,.28);
+  border-radius: 10px; padding: 9px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all .14s;
+}
+.sidebar__addbtn:hover { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.5); }
+
+.sidebar__foot { padding: 14px 18px; border-top: 1px solid rgba(255,255,255,.1); }
+.edittoggle {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.16); border-radius: 12px;
+  padding: 11px 14px; color: #fff; cursor: pointer; font-size: 13.5px; font-weight: 700; transition: all .15s;
+}
+.edittoggle__left { display: flex; align-items: center; gap: 9px; }
+.edittoggle__sw { width: 38px; height: 22px; border-radius: 99px; background: rgba(255,255,255,.2); position: relative; flex: none; transition: background .2s; }
+.edittoggle__sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .2s; }
+.edittoggle.on { background: rgba(46,121,187,.3); border-color: var(--blue); }
+.edittoggle.on .edittoggle__sw { background: var(--blue); }
+.edittoggle.on .edittoggle__sw::after { transform: translateX(16px); }
+
+/* ============================================================
+   MAIN COLUMN
+   ============================================================ */
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.topbar {
+  height: 58px; flex: none; background: rgba(255,255,255,.9); backdrop-filter: saturate(160%) blur(12px);
+  border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 14px; padding: 0 26px;
+  position: sticky; top: 0; z-index: 40;
+}
+.topbar__menubtn { display: none; background: none; border: none; cursor: pointer; color: var(--ink); padding: 4px; }
+.topbar__crumb { font-size: 13px; font-weight: 600; color: var(--gray); display: flex; align-items: center; gap: 8px; min-width: 0; }
+.topbar__crumb b { color: var(--indigo); font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar__spacer { flex: 1; }
+.topbar__badge {
+  font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+  padding: 5px 11px; border-radius: 99px;
+}
+.topbar__badge.edit { background: color-mix(in srgb, var(--blue) 14%, #fff); color: var(--blue); }
+.topbar__badge.learn { background: var(--canvas-2); color: var(--gray); }
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 7px; background: none; border: 1px solid var(--line-strong);
+  color: var(--ink-soft); border-radius: 9px; padding: 7px 13px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all .14s;
+}
+.btn-ghost:hover { border-color: var(--indigo); color: var(--indigo); background: var(--canvas); }
+.btn-export {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: linear-gradient(135deg, var(--indigo), var(--indigo-deep));
+  color: #fff; border: none; border-radius: 9px; padding: 8px 15px;
+  font-size: 13px; font-weight: 700; cursor: pointer; transition: all .14s; font-family: inherit;
+  box-shadow: 0 2px 8px rgba(38,35,93,.25);
+}
+.btn-export:hover { box-shadow: 0 4px 16px rgba(38,35,93,.38); transform: translateY(-1px); }
+
+.scroll { flex: 1; overflow-y: auto; }
+.canvas { max-width: 800px; margin: 0 auto; padding: 56px 40px 120px; }
+.canvas.wide { max-width: 940px; }
+
+/* ============================================================
+   COVER / LESSON HEADER
+   ============================================================ */
+.lessonhead { margin-bottom: 14px; padding: 48px 0 28px; }
+.lessonhead__kicker {
+  display: inline-flex; align-items: center; gap: 9px; font-size: 12.5px; font-weight: 800;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--magenta); margin-bottom: 20px;
+}
+.lessonhead__kicker .dot { width: 24px; height: 2px; border-radius: 2px; background: currentColor; border-radius: 2px; }
+.lessonhead h1 { font-size: clamp(36px, 5.4vw, 58px); margin-bottom: 0; max-width: 22ch; letter-spacing: -0.025em; }
+
+/* ---- hero (course home) ---- */
+.canvas--hero { max-width: 980px; padding: 34px 34px 96px; }
+.hero2 {
+  position: relative; overflow: hidden; border-radius: var(--radius-lg); color: #fff;
+  padding: clamp(40px, 5.5vw, 76px);
+  min-height: 440px; display: flex; flex-direction: column; justify-content: center;
+  box-shadow: var(--shadow-lg);
+  background:
+    radial-gradient(120% 130% at 88% 8%, rgba(222,27,84,.85) 0%, rgba(222,27,84,0) 46%),
+    radial-gradient(120% 120% at 12% 96%, rgba(46,121,187,.5) 0%, rgba(46,121,187,0) 52%),
+    linear-gradient(135deg, #2c2870 0%, var(--indigo) 42%, var(--indigo-deep) 100%);
+}
+.hero2__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .5; }
+.hero2__grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
+  background-size: 52px 52px;
+  -webkit-mask-image: radial-gradient(120% 100% at 72% 26%, #000 28%, transparent 80%);
+          mask-image: radial-gradient(120% 100% at 72% 26%, #000 28%, transparent 80%);
+}
+.hero2__inner { position: relative; z-index: 1; }
+.hero2__module {
+  font-size: 12.5px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--orange); margin-bottom: 16px;
+}
+.hero2__title { font-size: clamp(32px, 5.2vw, 54px); font-weight: 800; letter-spacing: -.03em; max-width: 18ch; margin: 0 0 20px; }
+.hero2__sub { font-size: 18.5px; line-height: 1.6; color: rgba(255,255,255,.9); max-width: 58ch; margin: 0; }
+.hero2__meta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
+.metachip2 {
+  display: flex; flex-direction: column; gap: 2px;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16);
+  border-radius: var(--radius-sm); padding: 11px 17px; min-width: 116px; backdrop-filter: blur(4px);
+}
+.metachip2__k { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.62); font-weight: 800; }
+.metachip2__v { font-size: 15px; font-weight: 700; color: #fff; }
+.hero2__cta {
+  margin-top: 38px; display: inline-flex; align-items: center; gap: 10px;
+  background: #fff; color: var(--indigo); font-weight: 800; font-size: 16px;
+  border: none; border-radius: 999px; padding: 15px 28px; cursor: pointer;
+  box-shadow: var(--shadow-md); transition: transform .15s, box-shadow .15s;
+}
+.hero2__cta:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+body.editing .hero2 [data-editable]:hover { background: rgba(255,255,255,.12); }
+
+/* ============================================================
+   BLOCKS (shared)
+   ============================================================ */
+.blocks { display: flex; flex-direction: column; }
+.blockwrap { position: relative; }
+.block-body { padding: 14px 0; }
+
+.blk-heading h2 { font-size: 30px; margin: 0; }
+.blk-heading h3 { font-size: 23px; margin: 0; }
+.blk-heading .eyebrow {
+  display: inline-flex; align-items: center; gap: 9px; font-size: 12.5px; font-weight: 800;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--magenta); margin-bottom: 12px;
+}
+.blk-heading .eyebrow .dot { width: 22px; height: 2px; border-radius: 2px; background: currentColor; }
+
+.blk-text { font-size: 18px; color: var(--ink-soft); line-height: 1.66; }
+.blk-text strong { color: var(--ink); font-weight: 700; }
+.blk-text ul { padding-left: 22px; margin: 0 0 1em; }
+.blk-text a { color: var(--blue); }
+
+/* image */
+.blk-image figure { margin: 0; }
+.blk-image img { width: 100%; border-radius: var(--radius); display: block; box-shadow: var(--shadow-sm); }
+.blk-image figcaption { font-size: 13.5px; color: var(--gray); margin-top: 10px; text-align: center; }
+.img-placeholder {
+  border: 2px dashed var(--line-strong); border-radius: var(--radius); background: var(--canvas-2);
+  min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  color: var(--gray); font-weight: 600; font-size: 14px;
+}
+
+/* embed */
+.embed-frame { position: relative; padding-top: 56.25%; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-md); background: #000; }
+.embed-frame iframe, .embed-frame video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.embed-caption { font-size: 13.5px; color: var(--gray); margin-top: 10px; text-align: center; }
+.embed-placeholder {
+  border: 2px dashed var(--line-strong); border-radius: var(--radius); background: var(--canvas-2);
+  aspect-ratio: 16/9; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  color: var(--gray); font-weight: 600; font-size: 14px;
+}
+
+/* statement / callout / quote */
+.statement { border-radius: var(--radius); padding: 24px 28px; box-shadow: var(--shadow-sm); }
+.statement.callout { background: var(--paper); border: 1px solid var(--line); border-left: 4px solid var(--accent); }
+.statement.quote { background: color-mix(in srgb, var(--accent) 7%, #fff); border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--line)); position: relative; }
+.statement.quote::before { content: "\201C"; font-size: 64px; line-height: 1; color: var(--accent); opacity: .35; position: absolute; top: 6px; left: 16px; font-family: Georgia, serif; }
+.statement.quote .statement__text { font-size: 22px; font-weight: 600; color: var(--ink); padding-left: 30px; font-style: italic; }
+.statement__label { font-size: 11.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+.statement__title { font-size: 18px; font-weight: 800; color: var(--indigo); margin-bottom: 7px; }
+.statement__text { font-size: 16px; color: var(--ink-soft); line-height: 1.6; }
+
+/* flip cards */
+.flipgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
+.flip { perspective: 1400px; height: 286px; cursor: pointer; background: none; border: none; padding: 0; font-family: inherit; text-align: left; }
+.flip__inner { position: relative; width: 100%; height: 100%; transition: transform .6s cubic-bezier(.4,0,.2,1); transform-style: preserve-3d; }
+.flip.is-flipped .flip__inner { transform: rotateY(180deg); }
+.flip__face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: var(--radius); padding: 24px; display: flex; flex-direction: column; border: 1px solid var(--line); box-shadow: var(--shadow-sm); overflow: hidden; }
+.flip__front { background: var(--paper); }
+.flip__front::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--cardaccent, var(--blue)); }
+.flip__icon { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; background: color-mix(in srgb, var(--cardaccent, var(--blue)) 14%, #fff); color: var(--cardaccent, var(--blue)); margin-bottom: auto; }
+.flip__icon svg { width: 24px; height: 24px; }
+.flip__title { font-size: 18px; font-weight: 800; color: var(--ink); margin-top: 18px; }
+.flip__hint { font-size: 12.5px; color: var(--gray); font-weight: 600; margin-top: 10px; display: flex; align-items: center; gap: 6px; }
+.flip__hint svg { width: 14px; height: 14px; }
+.flip__back { background: var(--cardaccent, var(--blue)); color: #fff; transform: rotateY(180deg); justify-content: flex-start; }
+.flip__kicker { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.72); margin-bottom: 8px; }
+.flip__backtitle { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 10px; }
+.flip__back p { font-size: 13.8px; line-height: 1.5; color: rgba(255,255,255,.94); overflow-y: auto; margin: 0; }
+
+/* tabs */
+.tabs__list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.tab { font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; border: 1px solid var(--line-strong); background: var(--paper); color: var(--ink-soft); padding: 9px 16px; border-radius: 99px; transition: all .15s; }
+.tab:hover { border-color: var(--indigo); color: var(--indigo); }
+.tab.is-active { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+.tabpanel { font-size: 16px; color: var(--ink-soft); line-height: 1.6; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px 26px; box-shadow: var(--shadow-sm); }
+
+/* accordion */
+.accordion { display: flex; flex-direction: column; gap: 12px; }
+.acc { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; transition: box-shadow .2s; }
+.acc.is-open { box-shadow: var(--shadow-md); }
+.acc__head { width: 100%; background: none; border: none; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 16px; padding: 18px 22px; text-align: left; }
+.acc__marker { width: 10px; height: 36px; border-radius: 6px; background: var(--accent); flex: none; }
+.acc__htext { flex: 1; }
+.acc__title { display: block; font-size: 16.5px; font-weight: 700; color: var(--ink); }
+.acc__sub { display: block; font-size: 13px; color: var(--gray); margin-top: 2px; }
+.acc__chev { width: 22px; height: 22px; color: var(--gray); transition: transform .3s; flex: none; }
+.acc.is-open .acc__chev { transform: rotate(180deg); color: var(--accent); }
+.acc__body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .35s cubic-bezier(.4,0,.2,1); }
+.acc.is-open .acc__body { grid-template-rows: 1fr; }
+.acc__bodyinner { overflow: hidden; }
+.acc__content { padding: 0 22px 22px 48px; font-size: 15.5px; color: var(--ink-soft); line-height: 1.6; }
+
+/* mcq */
+.mcq { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 26px 28px; box-shadow: var(--shadow-sm); }
+.mcq__tag { font-size: 11.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.mcq__q { font-size: 19px; font-weight: 800; color: var(--ink); margin-bottom: 18px; line-height: 1.4; }
+.mc-opts { display: flex; flex-direction: column; gap: 10px; }
+.mc-opt {
+  display: flex; align-items: center; gap: 13px; width: 100%; text-align: left; cursor: pointer;
+  background: var(--paper); border: 1.5px solid var(--line-strong); border-radius: 12px; padding: 15px 18px;
+  font-family: inherit; font-size: 15.5px; font-weight: 600; color: var(--ink); transition: all .15s;
+}
+.mc-opt:not(.is-answered):hover { border-color: var(--indigo); background: var(--canvas); }
+.mc-opt__radio { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line-strong); flex: none; transition: all .15s; display: grid; place-items: center; }
+.mc-opt.is-correct { border-color: var(--correct); background: var(--correct-bg); }
+.mc-opt.is-correct .mc-opt__radio { border-color: var(--correct); background: var(--correct); color: #fff; }
+.mc-opt.is-wrong { border-color: var(--wrong); background: var(--wrong-bg); }
+.mc-opt.is-wrong .mc-opt__radio { border-color: var(--wrong); background: var(--wrong); color: #fff; }
+.mc-opt.is-dim { opacity: .5; }
+.mc-opt.is-answered { cursor: default; }
+.mc-fb { margin-top: 16px; padding: 14px 18px; border-radius: 12px; font-size: 14.5px; display: none; }
+.mc-fb.show { display: block; }
+.mc-fb.ok { background: var(--correct-bg); color: #15663a; }
+.mc-fb.no { background: var(--wrong-bg); color: #8f1f33; }
+.mc-fb b { font-weight: 800; }
+
+/* divider */
+.blk-divider hr { border: none; border-top: 1px solid var(--line-strong); margin: 18px 0; }
+
+/* ============================================================
+   LESSON FOOTER (continue / finish)
+   ============================================================ */
+.lessonfoot { margin-top: 54px; padding-top: 30px; border-top: 1px solid var(--line); display: flex; align-items: center; gap: 14px; }
+.lessonfoot__prev { display: inline-flex; align-items: center; gap: 8px; background: none; border: 1px solid var(--line-strong); color: var(--ink-soft); border-radius: 12px; padding: 13px 20px; font-size: 15px; font-weight: 700; cursor: pointer; transition: all .14s; }
+.lessonfoot__prev:hover { border-color: var(--indigo); color: var(--indigo); }
+.lessonfoot__spacer { flex: 1; }
+.lessonfoot__cta {
+  display: inline-flex; align-items: center; gap: 10px; background: var(--indigo); color: #fff; border: none;
+  border-radius: 12px; padding: 14px 26px; font-size: 16px; font-weight: 800; cursor: pointer; transition: transform .12s, box-shadow .2s, background .2s;
+  box-shadow: 0 8px 22px rgba(38,35,93,.25);
+}
+.lessonfoot__cta:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(38,35,93,.34); }
+.lessonfoot__cta.done { background: var(--green); box-shadow: 0 8px 22px rgba(108,192,73,.3); }
+.lessonfoot__cta.finish { background: var(--magenta); box-shadow: 0 8px 22px rgba(222,27,84,.3); }
+
+/* ============================================================
+   COMPLETION SCREEN
+   ============================================================ */
+.complete { text-align: center; padding: 40px 0 60px; }
+.complete__ring { width: 150px; height: 150px; margin: 0 auto 28px; position: relative; }
+.complete__ring svg { transform: rotate(-90deg); }
+.complete__ring-track { stroke: var(--canvas-2); }
+.complete__ring-fill { stroke: var(--green); stroke-linecap: round; transition: stroke-dashoffset 1s cubic-bezier(.4,0,.2,1); }
+.complete__pct { position: absolute; inset: 0; display: grid; place-items: center; font-size: 34px; font-weight: 900; color: var(--indigo); }
+.complete h1 { font-size: 38px; margin-bottom: 12px; }
+.complete__sub { font-size: 18px; color: var(--ink-soft); max-width: 48ch; margin: 0 auto 28px; }
+.complete__award { width: 76px; height: 76px; border-radius: 50%; background: color-mix(in srgb, var(--green) 16%, #fff); color: var(--green); display: grid; place-items: center; margin: 0 auto 22px; }
+.complete__stats { display: flex; gap: 30px; justify-content: center; margin-bottom: 32px; }
+.complete__stat .n { font-size: 30px; font-weight: 900; color: var(--indigo); }
+.complete__stat .l { font-size: 12.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--gray); }
+.complete__actions { display: flex; gap: 12px; justify-content: center; }
+
+/* ============================================================
+   AUTHORING UI
+   ============================================================ */
+body.editing .blockwrap { transition: background .12s; border-radius: 12px; }
+body.editing .blockwrap:hover { background: color-mix(in srgb, var(--blue) 5%, transparent); }
+body.editing .blockwrap::after { content: ""; position: absolute; inset: 0; border: 1.5px dashed transparent; border-radius: 12px; pointer-events: none; transition: border-color .12s; }
+body.editing .blockwrap:hover::after { border-color: color-mix(in srgb, var(--blue) 30%, transparent); }
+
+.block-toolbar {
+  position: absolute; top: -14px; right: 10px; z-index: 5; display: none;
+  background: var(--indigo); border-radius: 10px; box-shadow: var(--shadow-md); padding: 4px;
+  gap: 2px; align-items: center;
+}
+body.editing .blockwrap:hover > .block-toolbar { display: flex; }
+.block-toolbar button { width: 30px; height: 30px; border-radius: 7px; border: none; background: none; color: rgba(255,255,255,.82); cursor: pointer; display: grid; place-items: center; transition: all .12s; }
+.block-toolbar button:hover { background: rgba(255,255,255,.16); color: #fff; }
+.block-toolbar button.danger:hover { background: var(--magenta); }
+.block-toolbar .sep { width: 1px; height: 18px; background: rgba(255,255,255,.2); margin: 0 2px; }
+.block-tag { position: absolute; top: -12px; left: 10px; z-index: 5; display: none; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; background: var(--blue); color: #fff; padding: 3px 8px; border-radius: 6px; }
+body.editing .blockwrap:hover > .block-tag { display: block; }
+
+/* inserter */
+.inserter {
+  position: relative; height: 32px; display: flex; align-items: center; justify-content: center;
+  margin: 2px 0;
+}
+.inserter__line {
+  position: absolute; left: 0; right: 0; height: 1px;
+  background: var(--line-strong); opacity: 1; border-radius: 2px;
+  transition: background .14s, height .14s;
+}
+.inserter__btn {
+  position: relative; z-index: 2; width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--line-strong);
+  background: var(--paper); color: var(--gray); display: grid; place-items: center; cursor: pointer;
+  opacity: 1; transition: all .14s; box-shadow: var(--shadow-sm); font-size: 16px; line-height: 1;
+}
+.inserter:hover .inserter__btn { background: var(--blue); border-color: var(--blue); color: #fff; transform: scale(1.1); box-shadow: 0 2px 10px rgba(46,121,187,.35); }
+.inserter:hover .inserter__line { background: var(--blue); height: 2px; opacity: .4; }
+.inserter--big { height: 56px; margin-top: 10px; }
+.inserter--big .inserter__btn { width: auto; height: auto; border-radius: 12px; padding: 12px 22px; font-size: 14px; font-weight: 800; border: none; background: var(--canvas-2); color: var(--ink-soft); display: inline-flex; align-items: center; gap: 8px; box-shadow: none; }
+.inserter--big:hover .inserter__btn { background: var(--blue); color: #fff; transform: none; }
+.inserter--big .inserter__line { display: none; }
+
+/* contentEditable */
+[contenteditable] { outline: none; }
+[contenteditable]:focus { box-shadow: 0 0 0 2px color-mix(in srgb, var(--blue) 40%, transparent); border-radius: 4px; }
+body.editing [data-editable] { cursor: text; border-radius: 4px; transition: background .12s; }
+body.editing [data-editable]:hover { background: color-mix(in srgb, var(--blue) 6%, transparent); }
+.edit-empty:empty::before { content: attr(data-ph); color: var(--gray-light); }
+
+/* rich text toolbar (floating) */
+.rt-toolbar { position: fixed; z-index: 200; background: var(--indigo); border-radius: 9px; box-shadow: var(--shadow-lg); padding: 4px; display: flex; gap: 2px; }
+.rt-toolbar button { width: 32px; height: 30px; border-radius: 6px; border: none; background: none; color: #fff; cursor: pointer; display: grid; place-items: center; }
+.rt-toolbar button:hover { background: rgba(255,255,255,.18); }
+
+/* ============================================================
+   EDIT PANELS / FIELDS (for structured blocks)
+   ============================================================ */
+.editpanel { background: var(--canvas-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-top: 12px; }
+.editpanel__title { font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--gray); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.field { margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
+.field__lab { font-size: 12px; font-weight: 700; color: var(--ink-soft); margin-bottom: 6px; display: block; }
+.inp, .ta, .sel {
+  width: 100%; font-family: inherit; font-size: 14.5px; color: var(--ink); background: var(--paper);
+  border: 1.5px solid var(--line-strong); border-radius: 9px; padding: 10px 13px; transition: border-color .14s;
+}
+.inp:focus, .ta:focus, .sel:focus { outline: none; border-color: var(--blue); }
+.ta { resize: vertical; min-height: 70px; line-height: 1.5; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.miniadd { display: inline-flex; align-items: center; gap: 7px; background: var(--paper); border: 1.5px dashed var(--line-strong); color: var(--ink-soft); border-radius: 9px; padding: 9px 14px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all .14s; }
+.miniadd:hover { border-color: var(--blue); color: var(--blue); }
+.subitem { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 12px; position: relative; }
+.subitem__del { position: absolute; top: 10px; right: 10px; width: 26px; height: 26px; border-radius: 7px; border: none; background: var(--canvas-2); color: var(--gray); cursor: pointer; display: grid; place-items: center; transition: all .14s; }
+.subitem__del:hover { background: var(--wrong-bg); color: var(--wrong); }
+.subitem__num { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--gray); margin-bottom: 10px; }
+.swatchrow { display: flex; gap: 8px; flex-wrap: wrap; }
+.swatch { width: 28px; height: 28px; border-radius: 8px; border: 2px solid transparent; cursor: pointer; transition: transform .1s; }
+.swatch:hover { transform: scale(1.12); }
+.swatch.on { border-color: var(--ink); box-shadow: 0 0 0 2px #fff inset; }
+.correct-toggle { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 700; cursor: pointer; padding: 6px 12px; border-radius: 8px; border: 1.5px solid var(--line-strong); background: var(--paper); color: var(--ink-soft); transition: all .14s; }
+.correct-toggle.on { border-color: var(--correct); background: var(--correct-bg); color: #15663a; }
+
+/* segmented */
+.seg { display: inline-flex; background: var(--paper); border: 1.5px solid var(--line-strong); border-radius: 9px; padding: 3px; gap: 2px; }
+.seg button { border: none; background: none; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--ink-soft); padding: 6px 14px; border-radius: 6px; cursor: pointer; transition: all .12s; }
+.seg button.on { background: var(--indigo); color: #fff; }
+
+/* icon picker (flip cards) */
+.iconpick { display: flex; flex-wrap: wrap; gap: 6px; }
+.iconpick__btn { width: 34px; height: 34px; border-radius: 9px; border: 1.5px solid var(--line-strong); background: var(--paper); color: var(--ink-soft); cursor: pointer; display: grid; place-items: center; transition: all .12s; }
+.iconpick__btn:hover { border-color: var(--blue); color: var(--blue); }
+.iconpick__btn.on { border-color: var(--indigo); background: color-mix(in srgb, var(--indigo) 12%, #fff); color: var(--indigo); }
+
+/* ============================================================
+   BLOCK PICKER MODAL
+   ============================================================ */
+.modal-veil { position: fixed; inset: 0; background: rgba(26,24,66,.42); backdrop-filter: blur(4px); z-index: 300; display: grid; place-items: center; padding: 24px; }
+.picker { background: var(--paper); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); width: min(620px, 100%); max-height: 80vh; overflow: hidden; display: flex; flex-direction: column; }
+.picker__head { padding: 22px 26px 18px; border-bottom: 1px solid var(--line); display: flex; align-items: center; }
+.picker__head h3 { font-size: 19px; }
+.picker__close { margin-left: auto; width: 34px; height: 34px; border-radius: 9px; border: none; background: var(--canvas-2); color: var(--ink-soft); cursor: pointer; display: grid; place-items: center; }
+.picker__close:hover { background: var(--line); }
+.picker__body { padding: 22px 26px 28px; overflow-y: auto; }
+.picker__group { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--gray); margin: 18px 0 12px; }
+.picker__group:first-child { margin-top: 0; }
+.picker__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.pickcard { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; background: var(--paper); border: 1.5px solid var(--line); border-radius: 14px; padding: 16px; cursor: pointer; transition: all .14s; text-align: left; }
+.pickcard:hover { border-color: var(--blue); background: var(--canvas); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.pickcard__icon { width: 40px; height: 40px; border-radius: 11px; background: color-mix(in srgb, var(--blue) 12%, #fff); color: var(--blue); display: grid; place-items: center; }
+.pickcard__label { font-size: 14px; font-weight: 700; color: var(--ink); }
+
+/* inline rename input in sidebar */
+.nav-rename { width: 100%; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--ink); background: #fff; border: 1.5px solid var(--blue); border-radius: 7px; padding: 7px 10px; }
+
+/* glossary-style empty hint */
+.empty-hint { text-align: center; color: var(--gray); padding: 60px 20px; }
+.empty-hint .ic { width: 54px; height: 54px; border-radius: 14px; background: var(--canvas-2); display: grid; place-items: center; margin: 0 auto 16px; color: var(--gray); }
+
+/* toast */
+.toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--indigo-deep); color: #fff; padding: 12px 20px; border-radius: 12px; font-size: 14px; font-weight: 600; box-shadow: var(--shadow-lg); opacity: 0; transition: all .25s; z-index: 400; pointer-events: none; display: flex; align-items: center; gap: 10px; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+.sidebar__scrim { display: none; }
+@media (max-width: 940px) {
+  .sidebar { position: fixed; left: 0; top: 0; z-index: 60; transform: translateX(-100%); transition: transform .28s cubic-bezier(.4,0,.2,1); box-shadow: var(--shadow-lg); }
+  body.nav-open .sidebar { transform: translateX(0); }
+  body.nav-open .sidebar__scrim { display: block; position: fixed; inset: 0; background: rgba(26,24,66,.4); z-index: 55; }
+  .topbar__menubtn { display: grid; place-items: center; }
+  .canvas { padding: 36px 22px 100px; }
+  .picker__grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .flipgrid { grid-template-columns: 1fr; }
+  .row2 { grid-template-columns: 1fr; }
+  .lessonfoot { flex-wrap: wrap; }
+  .lessonfoot__spacer { display: none; }
+  .lessonfoot__cta { width: 100%; justify-content: center; }
+}
+
+/* ============================================================
+   FOLDED-IN BLOCKS — stepper / hotspots / glossary / matching / classify
+   ============================================================ */
+
+/* shared buttons */
+.bx-btn { display: inline-flex; align-items: center; gap: 7px; border-radius: 9px; padding: 9px 16px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; border: 1px solid transparent; transition: all .15s; }
+.bx-btn.primary { background: var(--accent); color: #fff; }
+.bx-btn.primary:hover:not(:disabled) { filter: brightness(1.06); }
+.bx-btn.ghost { background: none; border-color: var(--line-strong); color: var(--ink-soft); }
+.bx-btn.ghost:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.bx-btn:disabled { opacity: .4; cursor: default; }
+
+/* ---- process steps ---- */
+.blk-stepper .bx-timeline { display: flex; gap: 0; margin-bottom: 22px; flex-wrap: wrap; }
+.bx-tstep { flex: 1; min-width: 110px; position: relative; background: none; border: none; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 0; }
+.bx-tstep__line { position: absolute; top: 23px; left: 50%; width: 100%; height: 3px; background: var(--line-strong); z-index: 0; }
+.bx-tstep:last-child .bx-tstep__line { display: none; }
+.bx-tstep__dot { position: relative; z-index: 1; width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: var(--canvas-2); color: var(--gray); border: 3px solid var(--paper); transition: all .2s; }
+.bx-tstep.is-active .bx-tstep__dot { background: var(--accent); color: #fff; }
+.bx-tstep.is-active .bx-tstep__line { background: var(--accent); }
+.bx-tstep__name { font-size: 13.5px; font-weight: 700; color: var(--ink-soft); text-align: center; line-height: 1.3; }
+.bx-tstep.is-active .bx-tstep__name { color: var(--ink); }
+.bx-tdetail { display: grid; grid-template-columns: 1.6fr 1fr; gap: 24px; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 26px 28px; box-shadow: var(--shadow-sm); }
+.bx-tdetail__num { font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+.bx-tdetail h3 { font-size: 22px; margin: 0 0 10px; color: var(--indigo); }
+.bx-tdetail p { font-size: 15.5px; color: var(--ink-soft); margin: 0; line-height: 1.6; }
+.bx-tdetail__agent { background: var(--canvas); border-radius: 12px; padding: 16px 18px; }
+.bx-flab { font-size: 11.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+.bx-stepnav { display: flex; justify-content: space-between; gap: 12px; margin-top: 18px; }
+@media (max-width: 720px) { .bx-tdetail { grid-template-columns: 1fr; } }
+
+/* ---- hotspots ---- */
+.bx-hsintro { font-size: 16px; color: var(--ink-soft); margin-bottom: 20px; line-height: 1.6; }
+.bx-hsflow { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; justify-content: center; background: var(--canvas); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px 18px; }
+.bx-hsnode { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.bx-hsbtn { width: 58px; height: 58px; border-radius: 16px; display: grid; place-items: center; background: var(--paper); border: 2px solid var(--line-strong); color: var(--ink-soft); cursor: pointer; transition: all .18s; }
+.bx-hsbtn:hover { border-color: var(--accent); color: var(--accent); }
+.bx-hsbtn.is-active { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 8px 20px -8px var(--accent); }
+.bx-hslabel { font-size: 12.5px; font-weight: 700; color: var(--ink-soft); max-width: 96px; text-align: center; line-height: 1.3; }
+.bx-hsarrow { color: var(--gray-light); display: flex; }
+.bx-hsinfo { margin-top: 18px; background: var(--paper); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 22px 24px; min-height: 92px; }
+.bx-hsempty { color: var(--gray); font-size: 15px; margin: 0; }
+.bx-hslayer { font-size: 11.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 7px; }
+.bx-hsinfo h4 { font-size: 18px; margin: 0 0 8px; color: var(--indigo); }
+.bx-hsinfo p { font-size: 15px; color: var(--ink-soft); margin: 0; line-height: 1.6; }
+
+/* ---- glossary ---- */
+.bx-gsearch { display: flex; align-items: center; gap: 10px; background: var(--paper); border: 1px solid var(--line-strong); border-radius: 11px; padding: 11px 15px; margin-bottom: 18px; color: var(--gray); }
+.bx-gsearch input { flex: 1; border: none; outline: none; font-family: inherit; font-size: 15px; color: var(--ink); background: none; }
+.bx-glist { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.bx-term { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+.bx-term__t { font-size: 15.5px; font-weight: 800; color: var(--indigo); margin-bottom: 5px; }
+.bx-term__d { font-size: 14px; color: var(--ink-soft); line-height: 1.55; }
+
+/* ---- knowledge check: matching + classify ---- */
+.bx-kc { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 26px 28px; box-shadow: var(--shadow-sm); }
+.bx-kc__tag { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--magenta); margin-bottom: 12px; }
+.bx-kc__instr { font-size: 16.5px; color: var(--ink); font-weight: 600; margin-bottom: 14px; line-height: 1.55; }
+.bx-mrow { display: flex; gap: 16px; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.bx-mrow:last-of-type { border-bottom: none; }
+.bx-mrow__q { font-size: 15px; color: var(--ink-soft); flex: 1; line-height: 1.5; }
+.bx-select { font-family: inherit; font-size: 14px; font-weight: 600; color: var(--ink); background: var(--canvas); border: 1.5px solid var(--line-strong); border-radius: 9px; padding: 9px 12px; min-width: 190px; cursor: pointer; }
+.bx-select:disabled { cursor: default; opacity: .9; }
+.bx-mrow.is-correct .bx-select { border-color: var(--green); background: color-mix(in srgb, var(--green) 14%, #fff); }
+.bx-mrow.is-wrong .bx-select { border-color: var(--magenta); background: color-mix(in srgb, var(--magenta) 10%, #fff); }
+.bx-citem { padding: 16px 0; border-bottom: 1px solid var(--line); }
+.bx-citem:last-of-type { border-bottom: none; }
+.bx-citem__q { font-size: 15.5px; color: var(--ink); font-weight: 600; margin-bottom: 10px; line-height: 1.5; }
+.bx-cfb { margin-top: 11px; font-size: 14px; border-radius: 9px; padding: 11px 14px; line-height: 1.5; }
+.bx-cfb.ok { background: color-mix(in srgb, var(--green) 13%, #fff); color: #2f6d1e; }
+.bx-cfb.no { background: color-mix(in srgb, var(--magenta) 10%, #fff); color: #9a1238; }
+.bx-kc__actions { display: flex; align-items: center; gap: 14px; margin-top: 20px; flex-wrap: wrap; }
+.bx-kc__result { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: 14px; }
+.bx-kc__result.ok { color: var(--green); }
+.bx-kc__result.partial { color: var(--orange); }
+@media (max-width: 560px) {
+  .bx-mrow { flex-direction: column; align-items: stretch; gap: 8px; }
+  .bx-select { min-width: 0; width: 100%; }
+}
+
+/* ============================================================
+   COURSES MANAGER + OUTLINE IMPORT
+   ============================================================ */
+.picker.lib .picker__body { display: block; }
+.lib__group { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--gray); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.lib__count { background: var(--canvas-2); color: var(--ink-soft); border-radius: 20px; font-size: 11px; padding: 1px 8px; }
+.lib__current { background: var(--canvas); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+.lib__row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.lib__startrow { margin-top: 14px; }
+.lib__spacer { flex: 1; }
+.lib__ai { border-color: color-mix(in srgb, var(--magenta) 40%, var(--line-strong)); color: var(--magenta); }
+.lib__ai:hover { border-color: var(--magenta); color: var(--magenta); background: color-mix(in srgb, var(--magenta) 8%, #fff); }
+.lib__hint { font-size: 13.5px; color: var(--gray); line-height: 1.55; margin: 0 0 8px; }
+.lib__list { display: flex; flex-direction: column; gap: 8px; }
+.lib__item { display: flex; align-items: center; gap: 12px; background: var(--paper); border: 1px solid var(--line); border-radius: 11px; padding: 12px 14px; }
+.lib__dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.lib__meta { flex: 1; min-width: 0; }
+.lib__title { font-size: 15px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lib__sub { font-size: 12.5px; color: var(--gray); margin-top: 2px; }
+.lib__act { background: none; border: 1px solid var(--line-strong); color: var(--ink-soft); border-radius: 8px; width: 32px; height: 32px; display: grid; place-items: center; cursor: pointer; flex: none; transition: all .14s; }
+.lib__act:hover { border-color: var(--indigo); color: var(--indigo); }
+.lib__act.danger:hover { border-color: var(--magenta); color: var(--magenta); }
+.lib__status { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 14px; font-weight: 600; color: var(--indigo); }
+.lib__spin { width: 16px; height: 16px; border: 2.5px solid var(--line-strong); border-top-color: var(--accent); border-radius: 50%; animation: lib-spin .7s linear infinite; flex: none; }
+@keyframes lib-spin { to { transform: rotate(360deg); } }
+.lib__error { margin-top: 12px; font-size: 13.5px; color: var(--magenta); background: color-mix(in srgb, var(--magenta) 9%, #fff); border-radius: 9px; padding: 10px 13px; }
+
+/* ============================================================
+   Outline Importer — modal + UI
+   ============================================================ */
+.imp-modal { max-width: 560px !important; }
+.imp-body { padding: 0 24px 28px; }
+
+/* tabs */
+.imp-tabs { display: flex; gap: 2px; border-bottom: 2px solid var(--line); margin-bottom: 20px; }
+.imp-tab { display: flex; align-items: center; gap: 6px; background: none; border: none; padding: 8px 14px; font: 500 13px var(--font); color: var(--gray); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; border-radius: 6px 6px 0 0; transition: color .15s; }
+.imp-tab:hover { color: var(--ink); }
+.imp-tab.on { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* drop zone */
+.imp-drop { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; border: 2.5px dashed var(--line-strong); border-radius: var(--radius); padding: 48px 24px; text-align: center; cursor: pointer; color: var(--gray); transition: border-color .15s, background .15s; }
+.imp-drop:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 4%, #fff); }
+.imp-drop svg { opacity: .4; }
+.imp-drop p { margin: 0; font-size: 14px; color: var(--ink); }
+.imp-drop__sub { font-size: 12px !important; color: var(--gray) !important; }
+
+/* paste */
+.imp-paste-wrap { display: flex; flex-direction: column; gap: 10px; }
+.imp-textarea { width: 100%; height: 200px; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.6; border: 1.5px solid var(--line); border-radius: var(--radius-sm); padding: 12px 14px; resize: vertical; color: var(--ink); background: var(--canvas); }
+.imp-textarea:focus { outline: none; border-color: var(--blue); background: #fff; }
+.imp-paste-hint { font-size: 12px; color: var(--gray); line-height: 1.5; }
+.imp-paste-hint code { background: var(--canvas-2); border-radius: 4px; padding: 1px 4px; font-size: 11px; color: var(--indigo); }
+
+/* loading */
+.imp-loading { display: flex; align-items: center; gap: 10px; padding: 20px 0; color: var(--gray); font-size: 14px; }
+.imp-spinner { width: 18px; height: 18px; border: 2.5px solid var(--line-strong); border-top-color: var(--accent); border-radius: 50%; animation: lib-spin .7s linear infinite; flex: none; }
+
+.imp-err { font-size: 13px; color: var(--magenta); background: color-mix(in srgb, var(--magenta) 9%, #fff); border-radius: 8px; padding: 10px 14px; margin-top: 12px; }
+
+/* preview */
+.imp-preview { background: var(--canvas); border: 1.5px solid var(--line); border-radius: var(--radius); padding: 18px 20px 20px; margin-top: 4px; }
+.imp-preview__head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+.imp-preview__title { font-size: 15px; font-weight: 700; color: var(--ink); }
+.imp-preview__stats { font-size: 12px; color: var(--gray); display: flex; gap: 6px; margin-top: 3px; }
+.imp-back { display: flex; align-items: center; gap: 5px; background: none; border: 1.5px solid var(--line); border-radius: 8px; padding: 5px 10px; font: 500 12px var(--font); color: var(--gray); cursor: pointer; white-space: nowrap; }
+.imp-back:hover { border-color: var(--accent); color: var(--accent); }
+.imp-tree { list-style: none; padding: 0; margin: 0 0 14px; display: flex; flex-direction: column; gap: 3px; max-height: 240px; overflow-y: auto; }
+.imp-tree__item { display: flex; align-items: center; gap: 7px; font-size: 13px; border-radius: 6px; padding: 4px 6px; }
+.imp-tree__section { color: var(--gray); font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding-top: 8px; }
+.imp-tree__lesson { color: var(--ink); padding-left: 14px; }
+.imp-tree__count { margin-left: auto; font-size: 11px; color: var(--gray); background: var(--canvas-2); border-radius: 10px; padding: 1px 7px; }
+.imp-tree__more { font-size: 12px; color: var(--gray); padding-left: 20px; }
+.imp-warn { font-size: 12px; color: var(--gray); margin: 0 0 14px; }
+.imp-cta { width: 100%; justify-content: center; box-shadow: none !important; }
+
+/* sidebar import button */
+.sidebar__importrow { padding: 4px 16px 8px; }
+.sidebar__importbtn { display: flex; align-items: center; gap: 7px; width: 100%; background: none; border: 1.5px dashed rgba(255,255,255,.25); border-radius: 8px; color: rgba(255,255,255,.7); font: 500 12.5px var(--font); padding: 8px 12px; cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
+.sidebar__importbtn:hover { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.5); color: #fff; }
+
+/* ---- API key section ---- */
+.imp-key-section { background: linear-gradient(135deg, color-mix(in srgb, var(--indigo) 6%, #fff), color-mix(in srgb, var(--blue) 4%, #fff)); border: 1.5px solid color-mix(in srgb, var(--indigo) 15%, #fff); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 18px; }
+.imp-key-label { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--indigo); margin-bottom: 10px; }
+.imp-key-row { display: flex; gap: 8px; }
+.imp-key-input { flex: 1; font: 13px 'Courier New', monospace; border: 1.5px solid var(--line); border-radius: 8px; padding: 8px 12px; color: var(--ink); background: #fff; }
+.imp-key-input:focus { outline: none; border-color: var(--blue); }
+.imp-key-input.saved { border-color: var(--correct); background: var(--correct-bg); }
+.imp-key-save { padding: 8px 16px; border-radius: 8px; border: none; background: var(--indigo); color: #fff; font: 600 12.5px var(--font); cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 5px; }
+.imp-key-save.done { background: var(--correct); }
+.imp-key-hint { font-size: 11.5px; color: var(--gray); margin: 8px 0 0; }
+
+/* ---- drop zone ready state ---- */
+.imp-drop--ready { border-color: var(--correct); background: var(--correct-bg); color: var(--correct); cursor: default; }
+.imp-drop--ready svg { opacity: .7; }
+
+/* ============================================================
+   Outline Importer — two-column layout (Stitch redesign)
+   ============================================================ */
+.imp-modal--wide { max-width: 860px !important; width: 92vw; }
+.imp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; padding: 0 24px 26px; align-items: start; }
+.imp-col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+/* convert button spans the input column */
+.imp-convert { width: 100%; justify-content: center; box-shadow: none !important; margin-top: 2px; }
+.imp-remove { width: 100%; justify-content: center; margin-top: 8px; }
+.imp-col--input .imp-textarea { height: 230px; }
+
+/* right-hand AI preview pane */
+.imp-pane { display: flex; flex-direction: column; background: var(--indigo-deep); border-radius: var(--radius); overflow: hidden; min-height: 360px; box-shadow: var(--shadow-md); }
+.imp-pane__head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,.1); }
+.imp-pane__title { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700; color: #fff; }
+.imp-pane__badge { font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.55); border: 1px solid rgba(255,255,255,.2); border-radius: 999px; padding: 3px 10px; }
+.imp-pane__badge.analyzing { color: var(--orange); border-color: color-mix(in srgb, var(--orange) 50%, transparent); }
+.imp-pane__badge.ready { color: #fff; background: var(--green); border-color: var(--green); }
+.imp-pane__body { padding: 16px 18px; overflow-y: auto; flex: 1; }
+.imp-pane__foot { padding: 14px 18px; border-top: 1px solid rgba(255,255,255,.1); }
+
+/* empty state */
+.imp-pane__empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 30px; text-align: center; color: rgba(255,255,255,.5); }
+.imp-pane__empty p { margin: 0; font-size: 13.5px; color: rgba(255,255,255,.75); }
+.imp-pane__emptysub { font-size: 12px !important; color: rgba(255,255,255,.45) !important; }
+
+/* progress shimmer */
+.imp-progress { margin-bottom: 18px; }
+.imp-progress__bar { height: 6px; border-radius: 999px; background: rgba(255,255,255,.12); overflow: hidden; }
+.imp-progress__shimmer { height: 100%; width: 40%; border-radius: 999px; background: linear-gradient(90deg, var(--magenta), var(--orange)); animation: imp-slide 1.3s ease-in-out infinite; }
+@keyframes imp-slide { 0% { margin-left: -40%; } 100% { margin-left: 100%; } }
+.imp-progress__label { display: block; margin-top: 9px; font-size: 12px; font-weight: 600; color: rgba(255,255,255,.7); }
+
+/* skeleton rows */
+.imp-skel { display: flex; flex-direction: column; gap: 10px; }
+.imp-skel__row { height: 13px; border-radius: 6px; background: linear-gradient(90deg, rgba(255,255,255,.08), rgba(255,255,255,.16), rgba(255,255,255,.08)); background-size: 200% 100%; animation: imp-shimmer 1.5s linear infinite; }
+.imp-skel__row.indent { margin-left: 18px; }
+.imp-skel__row.w60 { width: 60%; } .imp-skel__row.w70 { width: 70%; }
+.imp-skel__row.w80 { width: 80%; } .imp-skel__row.w85 { width: 85%; } .imp-skel__row.w90 { width: 90%; }
+@keyframes imp-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* preview content on dark pane */
+.imp-pane .imp-preview__title { color: #fff; font-size: 15px; font-weight: 800; margin-bottom: 4px; }
+.imp-pane .imp-preview__stats { color: rgba(255,255,255,.6); margin-bottom: 14px; }
+.imp-pane .imp-tree { max-height: none; }
+.imp-pane .imp-tree__section { color: rgba(255,255,255,.55); }
+.imp-pane .imp-tree__lesson { color: rgba(255,255,255,.92); }
+.imp-pane .imp-tree__count { background: rgba(255,255,255,.1); color: rgba(255,255,255,.7); }
+.imp-pane .imp-tree__more { color: rgba(255,255,255,.5); }
+.imp-pane .imp-warn { color: rgba(255,255,255,.6); margin: 0 0 12px; }
+.imp-pane .imp-cta { width: 100%; justify-content: center; }
+
+/* responsive: stack on narrow screens */
+@media (max-width: 720px) {
+  .imp-grid { grid-template-columns: 1fr; }
+  .imp-pane { min-height: 260px; }
+}
+
+/* neutral wordmark in place of the removed logo image */
+.sidebar__wordmark { font-size: 15px; font-weight: 800; letter-spacing: -0.01em; color: #fff; display: block; }
+
+/* ============================================================
+   Site login gate
+   ============================================================ */
+.gate {
+  position: fixed; inset: 0; z-index: 9999;
+  display: grid; place-items: center; padding: 24px;
+  background:
+    radial-gradient(120% 130% at 88% 8%, rgba(222,27,84,.85) 0%, rgba(222,27,84,0) 46%),
+    radial-gradient(120% 120% at 12% 96%, rgba(46,121,187,.55) 0%, rgba(46,121,187,0) 50%),
+    linear-gradient(135deg, #2c2870 0%, var(--indigo) 42%, var(--indigo-deep) 100%);
+}
+.gate__card {
+  width: 100%; max-width: 360px; background: #fff;
+  border-radius: var(--radius-lg); padding: 36px 32px;
+  box-shadow: var(--shadow-lg); text-align: center;
+}
+.gate__card--loading { color: var(--gray); font-weight: 600; }
+.gate__mark { font-size: 13px; font-weight: 800; letter-spacing: .04em; color: var(--magenta); text-transform: uppercase; margin-bottom: 18px; }
+.gate__title { font-size: 26px; font-weight: 800; color: var(--ink); margin-bottom: 6px; }
+.gate__sub { font-size: 14px; color: var(--gray); margin-bottom: 22px; }
+.gate__input {
+  width: 100%; font-size: 15px; font-family: var(--font);
+  border: 1.5px solid var(--line-strong); border-radius: var(--radius-sm);
+  padding: 12px 14px; color: var(--ink); background: var(--canvas);
+}
+.gate__input:focus { outline: none; border-color: var(--blue); background: #fff; }
+.gate__err { color: var(--magenta); font-size: 13px; margin: 10px 0 0; }
+.gate__btn {
+  width: 100%; margin-top: 16px; font-family: var(--font);
+  font-size: 15px; font-weight: 700; color: #fff; cursor: pointer;
+  background: var(--indigo); border: none; border-radius: 999px; padding: 13px;
+  transition: background .15s, transform .15s;
+}
+.gate__btn:hover:not(:disabled) { background: #322c78; transform: translateY(-1px); }
+.gate__btn:disabled { opacity: .5; cursor: default; }
+.gate__hint { font-size: 12px; color: var(--gray); margin: 16px 0 0; }
+
+/* ============================================================
+   Dashboard — course library screen
+   ============================================================ */
+.dash { min-height: 100vh; background: var(--canvas); overflow-y: auto; }
+.dash__inner { max-width: 1080px; margin: 0 auto; padding: 56px 32px 80px; }
+.dash__head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 36px; flex-wrap: wrap; }
+.dash__eyebrow { font-size: 12.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--magenta); margin-bottom: 10px; }
+.dash__title { font-size: clamp(30px, 5vw, 42px); color: var(--ink); }
+.dash__sub { font-size: 16px; color: var(--gray); margin-top: 8px; }
+.dash__actions { display: flex; gap: 10px; align-items: center; }
+.dash__new { display: inline-flex; align-items: center; gap: 8px; background: var(--indigo); color: #fff; border: none; border-radius: 999px; padding: 12px 22px; font: 700 14.5px var(--font); cursor: pointer; box-shadow: var(--shadow-md); transition: transform .15s, box-shadow .15s; }
+.dash__new:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+
+.dash__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.dcard { position: relative; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; transition: transform .15s, box-shadow .15s; display: flex; }
+.dcard:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+.dcard__stripe { width: 6px; flex: none; align-self: stretch; }
+.dcard__body { padding: 20px 22px; flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.dcard__top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.dcard__pill { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; border-radius: 999px; padding: 4px 11px; }
+.dcard__del { background: none; border: none; color: var(--gray-light); cursor: pointer; padding: 2px; transition: color .15s; }
+.dcard__del:hover { color: var(--magenta); }
+.dcard__title { font-size: 18px; font-weight: 800; color: var(--ink); line-height: 1.25; margin-bottom: 10px; }
+.dcard__meta { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--gray); margin-bottom: 18px; }
+.dcard__meta span { display: inline-flex; align-items: center; gap: 5px; }
+.dcard__dot { color: var(--line-strong); }
+.dcard__open { margin-top: auto; align-self: flex-start; display: inline-flex; align-items: center; gap: 7px; background: var(--canvas-2); color: var(--indigo); border: none; border-radius: 999px; padding: 9px 18px; font: 700 13.5px var(--font); cursor: pointer; transition: background .15s, color .15s; }
+.dcard__open:hover { background: var(--indigo); color: #fff; }
+
+.dcard--new { flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 180px; border: 2px dashed var(--line-strong); background: transparent; box-shadow: none; cursor: pointer; padding: 24px; text-align: center; color: var(--gray); font-family: var(--font); }
+.dcard--new:hover { border-color: var(--indigo); color: var(--indigo); background: color-mix(in srgb, var(--indigo) 3%, #fff); transform: translateY(-3px); }
+.dcard--new__icon { width: 48px; height: 48px; border-radius: 50%; background: var(--paper); box-shadow: var(--shadow-sm); display: grid; place-items: center; }
+.dcard--new__label { font-size: 15px; font-weight: 700; color: var(--ink); }
+.dcard--new__sub { font-size: 12.5px; color: var(--gray); }
+
+.dash__empty { text-align: center; color: var(--gray); font-size: 14px; margin-top: 28px; }
+
+/* library back button in the builder top bar */
+.topbar__lib { padding: 7px 14px !important; }
+
+@media (max-width: 560px) {
+  .dash__inner { padding: 36px 20px 60px; }
+  .dash__head { flex-direction: column; align-items: stretch; }
+}
+
+.dash__error { text-align: center; color: var(--magenta); font-size: 14px; margin: 20px 0; background: color-mix(in srgb, var(--magenta) 8%, #fff); border-radius: 10px; padding: 12px 16px; }
+
+/* ============================================================
+   PREMIUM LEARNER VIEW  (Claude Design — v2)
+   Scroll-driven signal rail · ambient blobs · reveal animations
+   Premium flip cards · MCQ badge letters
+   ============================================================ */
+
+/* --- Scroll progress bar (3px gradient line at top of topbar) --- */
+.scroll-prog {
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: rgba(38,35,93,0.08); z-index: 2; pointer-events: none;
+}
+.scroll-prog__fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, #26235D, #DE1B54);
+  transition: width .12s linear;
+}
+.topbar__prog-pct {
+  flex-shrink: 0; font-size: 13px; font-weight: 700; color: #26235D;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Signal rail (fixed left edge) --- */
+.signal-rail {
+  position: fixed; left: 18px; top: 0; bottom: 0; width: 2px; z-index: 45;
+  pointer-events: none;
+}
+.signal-rail__track {
+  position: absolute; inset: 0; background: rgba(38,35,93,0.10); border-radius: 2px;
+}
+.signal-rail__fill {
+  position: absolute; left: 0; top: 0; width: 2px; height: 0px;
+  background: linear-gradient(180deg, rgba(38,35,93,0.45), #26235D 55%, #DE1B54);
+  border-radius: 2px; will-change: height;
+}
+.signal-rail__pulse {
+  position: absolute; left: 1px; top: 0; will-change: transform;
+  transform: translate(-50%, 0);
+}
+.signal-rail__trail {
+  position: absolute; left: 0; top: 0; width: 2px; height: 130px;
+  margin-left: -1px; margin-top: -130px;
+  background: linear-gradient(180deg, transparent, #DE1B54);
+  opacity: 0; border-radius: 2px;
+}
+.signal-rail__node {
+  position: absolute; left: 0; top: 0;
+  width: 14px; height: 14px; margin: -7px 0 0 -7px;
+  border-radius: 50%; background: #26235D;
+  box-shadow: 0 0 12px 3px rgba(38,35,93,0.5);
+  will-change: transform, background, box-shadow;
+}
+
+/* --- Ambient depth blobs (fixed, behind content) --- */
+.ambient-blob-1 {
+  position: fixed; top: 16%; right: -120px; width: 580px; height: 580px;
+  border-radius: 50%; filter: blur(52px);
+  background: radial-gradient(circle at 42% 42%, rgba(38,35,93,0.95), transparent 68%);
+  opacity: 0.045; pointer-events: none; z-index: 0;
+  will-change: transform, opacity;
+  animation: blobFloat 14s ease-in-out infinite;
+}
+.ambient-blob-2 {
+  position: fixed; top: 54%; left: 6%; width: 380px; height: 380px;
+  border-radius: 50%; filter: blur(48px);
+  background: radial-gradient(circle at 50% 50%, rgba(222,27,84,0.95), transparent 66%);
+  opacity: 0; pointer-events: none; z-index: 0;
+  will-change: transform, opacity;
+}
+@keyframes blobFloat {
+  0%, 100% { transform: translate(0,0) scale(1); }
+  50%       { transform: translate(-14px,18px) scale(1.06); }
+}
+
+/* --- Reduced motion: skip all animations, show everything --- */
+@media (prefers-reduced-motion: reduce) {
+  .signal-rail { display: none; }
+  .ambient-blob-1, .ambient-blob-2 { display: none; }
+  body:not(.editing) [data-reveal] { opacity: 1 !important; transform: none !important; transition: none !important; }
+}
+@media (max-width: 560px) { .signal-rail { display: none; } }
+
+/* --- Block reveal (JS adds/removes .is-visible) --- */
+body:not(.editing) [data-reveal] {
+  opacity: 0; transform: translateY(42px);
+  transition: opacity .9s ease, transform 1s cubic-bezier(.22,.61,.36,1);
+  will-change: opacity, transform;
+}
+body:not(.editing) [data-reveal].is-visible {
+  opacity: 1; transform: none;
+}
+
+/* --- Premium learner canvas & lesson head typography --- */
+body:not(.editing) .canvas { max-width: 1040px; overflow-x: clip; padding-left: 56px; }
+/* Full-width layout when sidebar is fixed overlay in learner mode */
+body:not(.editing) .app { display: block; }
+body:not(.editing) .main { width: 100%; }
+body:not(.editing) .lessonhead { padding: 80px 0 40px; margin-bottom: 0; }
+body:not(.editing) .lessonhead__kicker {
+  display: inline-flex; align-items: center; gap: 10px; margin-bottom: 26px;
+  font-size: 13px; letter-spacing: 0.18em; color: #DE1B54;
+}
+body:not(.editing) .lessonhead__kicker .dot { display: none; }
+body:not(.editing) .lessonhead__kicker::before {
+  content: ""; display: inline-block; width: 28px; height: 2px;
+  background: #DE1B54; border-radius: 2px; flex-shrink: 0;
+}
+body:not(.editing) .lessonhead h1 {
+  font-size: clamp(42px, 6.4vw, 72px); line-height: 1.02;
+  letter-spacing: -0.03em; max-width: 760px; color: #1D2230;
+}
+body:not(.editing) .lessonfoot__cta {
+  background: linear-gradient(135deg, #26235D, #1A1842);
+  border-radius: 14px; padding: 14px 26px;
+  font-size: 16px; font-weight: 600;
+  box-shadow: 0 12px 28px -12px rgba(38,35,93,0.6);
+}
+body:not(.editing) .lessonfoot__cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 34px -12px rgba(38,35,93,0.7);
+}
+
+/* --- Premium 3D flip cards --- */
+body:not(.editing) .flipgrid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+body:not(.editing) .flip { perspective: 1600px; height: 240px; }
+body:not(.editing) .flip__inner { transition: transform .8s cubic-bezier(.2,.7,.2,1); }
+/* hover flips — click (is-flipped) locks it flipped even after hover ends */
+body:not(.editing) .flip:hover .flip__inner,
+body:not(.editing) .flip.is-flipped .flip__inner { transform: rotateY(180deg); }
+/* when locked-flipped and user hovers, keep it flipped (no double-flip) */
+body:not(.editing) .flip.is-flipped:hover .flip__inner { transform: rotateY(180deg); }
+body:not(.editing) .flip__face { border-radius: 22px; padding: 30px; justify-content: space-between; }
+body:not(.editing) .flip__front {
+  border: 1px solid rgba(29,34,48,0.07); background: #FFFFFF;
+  box-shadow: 0 1px 2px rgba(20,24,48,0.04), 0 18px 40px -24px rgba(20,24,48,0.22);
+}
+body:not(.editing) .flip__front::before { display: none; }
+body:not(.editing) .flip__icon { display: none; }
+body:not(.editing) .flip__title { font-size: 34px; font-weight: 800; letter-spacing: -0.02em; color: #1D2230; margin-top: 0; }
+body:not(.editing) .flip__hint { font-size: 12px; font-weight: 500; opacity: 0.4; margin-top: 8px; }
+body:not(.editing) .flip__hint svg { display: none; }
+body:not(.editing) .flip__back { background: linear-gradient(150deg, #26235D, #1A1842); box-shadow: 0 18px 40px -20px rgba(26,24,66,0.55); }
+body:not(.editing) .flip__kicker { font-size: 12px; font-weight: 700; letter-spacing: 0.16em; color: rgba(255,255,255,0.5); margin-bottom: 0; text-transform: uppercase; }
+body:not(.editing) .flip__backtitle { font-size: 13px; font-weight: 700; opacity: 0.8; margin-bottom: 4px; }
+body:not(.editing) .flip__back p { font-size: 19px; line-height: 1.5; font-weight: 500; color: #FFFFFF; }
+/* alternating magenta back */
+body:not(.editing) .flipgrid .flip:nth-child(even) .flip__back {
+  background: linear-gradient(150deg, #DE1B54, #b3133f);
+  box-shadow: 0 18px 40px -20px rgba(222,27,84,0.5);
+}
+
+/* --- Premium MCQ with A/B/C badge letters --- */
+body:not(.editing) .mcq {
+  border-radius: 26px; padding: clamp(28px, 4vw, 48px);
+  box-shadow: 0 1px 2px rgba(20,24,48,0.04), 0 30px 60px -40px rgba(20,24,48,0.30);
+  border: 1px solid rgba(29,34,48,0.07);
+}
+body:not(.editing) .mcq__q {
+  font-size: clamp(22px, 2.6vw, 28px); font-weight: 700;
+  letter-spacing: -0.01em; margin-bottom: 32px; line-height: 1.4;
+}
+body:not(.editing) .mc-opts { gap: 14px; }
+body:not(.editing) .mc-opt {
+  padding: 20px 24px; border-radius: 16px; border: 2px solid #E4E6EE;
+  font-size: 18px; font-weight: 500; color: #1D2230;
+  box-shadow: 0 1px 2px rgba(20,24,48,0.03);
+}
+body:not(.editing) .mc-opt:not(.is-answered):hover {
+  border-color: #26235D; background: rgba(38,35,93,0.04);
+}
+body:not(.editing) .mc-opt__radio {
+  width: 38px; height: 38px; min-width: 38px; border: none; border-radius: 50%;
+  background: #F0F1F6; color: #6B7280; font-size: 16px; font-weight: 700;
+  transition: all .3s ease; position: relative;
+}
+/* show badge letter via pseudo-element */
+body:not(.editing) .mc-opt__radio::before {
+  content: attr(data-letter);
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700;
+}
+body:not(.editing) .mc-opt.is-answered .mc-opt__radio::before { display: none; }
+body:not(.editing) .mc-opt.is-correct { border-color: #6CC049; background: rgba(108,192,73,0.08); }
+body:not(.editing) .mc-opt.is-correct .mc-opt__radio { background: #6CC049; color: #fff; }
+body:not(.editing) .mc-opt.is-wrong { border-color: #DE1B54; background: rgba(222,27,84,0.07); }
+body:not(.editing) .mc-opt.is-wrong .mc-opt__radio { background: #DE1B54; color: #fff; }
+body:not(.editing) .mc-opt.is-dim { opacity: 0.55; }
+body:not(.editing) .mc-fb.show {
+  padding: 14px 18px; border-radius: 12px; font-size: 17px; line-height: 1.55;
+  display: flex; align-items: flex-start; gap: 12px; margin-top: 26px; border-top: 1px solid rgba(29,34,48,0.07);
+  background: none;
+}
+body:not(.editing) .mc-fb.ok { color: #4f9e2f; }
+body:not(.editing) .mc-fb.no { color: #DE1B54; }
+
+/* ============================================================
+   LEARNER SIDEBAR — white collapsible overlay
+   ============================================================ */
+body:not(.editing) .sidebar {
+  position: fixed; top: 0; left: 0; bottom: 0; z-index: 60;
+  transform: translateX(-100%);
+  transition: transform .42s cubic-bezier(.22,.61,.36,1);
+  will-change: transform;
+  background: #FFFFFF !important;
+  background-image: none !important;
+  color: #1D2230;
+  box-shadow: 24px 0 60px -40px rgba(20,24,48,0.35);
+  border-right: 1px solid rgba(29,34,48,0.07);
+}
+body.nav-open:not(.editing) .sidebar { transform: translateX(0); }
+
+body:not(.editing) .sidebar__head {
+  background: #FFFFFF; border-bottom-color: rgba(29,34,48,0.06);
+}
+body:not(.editing) .sidebar__wordmark { color: #9aa0ad; }
+body:not(.editing) .sidebar__title { color: #1D2230; font-size: 17px; }
+body:not(.editing) .sidebar__sub { color: #6B7280; }
+body:not(.editing) .sidebar__progress .sidebar__ptrack { background: rgba(38,35,93,0.10); }
+body:not(.editing) .sidebar__pmeta { color: rgba(38,35,93,0.5); }
+body:not(.editing) .navsection { color: #9aa0ad; }
+body:not(.editing) .navitem { color: #6B7280; background: transparent; }
+body:not(.editing) .navitem:hover { background: rgba(38,35,93,0.05); color: #1D2230; }
+body:not(.editing) .navitem.is-active {
+  background: rgba(38,35,93,0.06); color: #26235D; border: none;
+}
+body:not(.editing) .navitem.is-active::before { background: #DE1B54; }
+body:not(.editing) .navitem__check { border-color: rgba(38,35,93,0.18); color: #6B7280; }
+body:not(.editing) .navitem.is-done .navitem__check { background: #26235D; border-color: #26235D; color: #fff; }
+body:not(.editing) .sidebar__foot { border-top-color: rgba(29,34,48,0.06); }
+body:not(.editing) .edittoggle { display: none; } /* moved to topbar */
+body:not(.editing) .sidebar__addrow,
+body:not(.editing) .sidebar__importrow { display: none; }
+
+/* Mode toggle button in topbar (replaces sidebar edittoggle) */
+.topbar__modetoggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: 1.5px solid var(--line-strong);
+  color: var(--ink-soft); border-radius: 9px; padding: 6px 13px;
+  font-size: 13px; font-weight: 700; cursor: pointer; transition: all .14s;
+  font-family: inherit; white-space: nowrap;
+}
+.topbar__modetoggle:hover { border-color: var(--indigo); color: var(--indigo); background: var(--canvas); }
+.topbar__modetoggle.on { background: color-mix(in srgb, var(--blue) 12%, #fff); border-color: var(--blue); color: var(--blue); }
+
+/* Backdrop / scrim in learner mode */
+body:not(.editing) .sidebar__scrim {
+  position: fixed; inset: 0; z-index: 55;
+  background: rgba(20,24,48,0.42);
+  backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+  opacity: 0; pointer-events: none; transition: opacity .42s ease;
+}
+body.nav-open:not(.editing) .sidebar__scrim { opacity: 1; pointer-events: auto; }
+
+/* Hamburger button — visible in learner mode */
+body:not(.editing) .topbar__menubtn {
+  display: flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; flex-shrink: 0;
+  border: 1px solid rgba(29,34,48,0.10); background: #FFFFFF;
+  border-radius: 11px; box-shadow: 0 1px 2px rgba(20,24,48,0.04);
+  color: var(--indigo);
+}
+body:not(.editing) .topbar__menubtn:hover { border-color: rgba(38,35,93,0.30); }
+
+/* Hide spacer, show segments instead in learner mode */
+body:not(.editing) .topbar__spacer { display: none; }
+
+/* Segmented lesson progress bar in topbar */
+.topbar__segments {
+  flex: 1; display: flex; align-items: center; gap: 5px;
+  padding: 0 8px; min-width: 80px;
+}
+.topbar__seg {
+  flex: 1; height: 5px; border-radius: 3px;
+  background: rgba(38,35,93,0.12); cursor: pointer;
+  transition: opacity .15s;
+}
+.topbar__seg:hover { opacity: .7; }
+.topbar__seg.done { background: linear-gradient(90deg, #26235D, #DE1B54); }
+.topbar__seg.current { flex: 1.5; background: #B7BBC9; }
+
+/* Section divider: eyebrow label + extending line */
+body:not(.editing) .blk-heading .eyebrow {
+  display: flex; align-items: center; gap: 12px; width: 100%; margin-bottom: 20px;
+}
+body:not(.editing) .blk-heading .eyebrow::after {
+  content: ""; flex: 1; height: 1px; background: rgba(29,34,48,0.08);
+}
+body:not(.editing) .blk-heading .eyebrow .dot { display: none; }
+
+/* Timeline draw-in: the .stepper__track starts hidden, animates on data-timeline-animate */
+body:not(.editing) .stepper__track { transition: transform 1.9s cubic-bezier(.4,0,.1,1); transform: scaleY(0); transform-origin: top center; }
+body:not(.editing) .stepper.timeline-drawn .stepper__track { transform: scaleY(1); }
+
+/* Hero parallax: title and para have will-change set by JS */
+body:not(.editing) .lessonhead__parallax { will-change: opacity, transform; }
+
+/* ============================================================
+   EXIT LIBRARY BUTTON — prominent, distinct from other actions
+   ============================================================ */
+.btn-lib-exit {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0 16px; height: 36px; border-radius: 10px; border: none;
+  background: var(--indigo); color: #fff;
+  font-size: 13px; font-weight: 700; letter-spacing: .02em;
+  cursor: pointer; transition: background .15s, box-shadow .15s;
+  box-shadow: 0 2px 8px rgba(38,35,93,.35);
+  white-space: nowrap;
+}
+.btn-lib-exit:hover { background: #1A1842; box-shadow: 0 4px 14px rgba(38,35,93,.45); }
+
+/* ============================================================
+   REVIEW / COMMENT PANEL (edit mode only)
+   ============================================================ */
+.review-panel { margin-top: 8px; border-top: 1px solid var(--line); padding-top: 8px; }
+
+.review-toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 8px; border: 1px solid var(--line);
+  background: #fff; color: var(--gray); font-size: 12.5px; font-weight: 600;
+  cursor: pointer; transition: border-color .15s, color .15s;
+}
+.review-toggle:hover { border-color: var(--blue); color: var(--blue); }
+.review-toggle.has-items { border-color: var(--orange); color: var(--orange); background: color-mix(in srgb, var(--orange) 8%, #fff); }
+.review-toggle.open { border-color: var(--blue); color: var(--blue); background: color-mix(in srgb, var(--blue) 8%, #fff); }
+
+.review-panel__body {
+  margin-top: 10px; background: var(--canvas); border-radius: var(--radius-sm);
+  padding: 12px; display: flex; flex-direction: column; gap: 10px;
+  border: 1px solid var(--line);
+}
+
+.review-item {
+  background: #fff; border-radius: 8px; padding: 10px 12px;
+  border: 1px solid var(--line);
+}
+.review-item__text { font-size: 13.5px; color: var(--ink); margin: 0 0 6px; white-space: pre-wrap; }
+.review-item__meta {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11.5px; color: var(--gray);
+}
+.review-item__meta button { background: none; border: none; cursor: pointer; color: var(--gray); padding: 2px 4px; border-radius: 4px; }
+.review-item__meta button:hover { color: var(--wrong); }
+
+.review-compose { display: flex; gap: 8px; align-items: flex-end; }
+.review-compose__input {
+  flex: 1; min-height: 64px; padding: 8px 10px; border-radius: 8px;
+  border: 1px solid var(--line); font-family: var(--font); font-size: 13px; resize: vertical;
+  background: #fff; color: var(--ink);
+}
+.review-compose__input:focus { outline: none; border-color: var(--blue); }
+.review-compose__send {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 8px 14px; border-radius: 8px; border: none;
+  background: var(--blue); color: #fff; font-size: 13px; font-weight: 600;
+  cursor: pointer; white-space: nowrap; transition: background .15s;
+}
+.review-compose__send:hover { background: #1f5d9e; }
+.review-compose__send:disabled { opacity: .45; cursor: default; }
+
+/* ============================================================
+   IMAGE SIZE CONTROLS
+   ============================================================ */
+.img-size-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.img-size-btn {
+  padding: 5px 12px; border-radius: 8px; border: 1px solid var(--line);
+  background: #fff; color: var(--ink-soft); font-size: 12.5px; font-weight: 600;
+  cursor: pointer; transition: border-color .12s, color .12s, background .12s;
+}
+.img-size-btn:hover { border-color: var(--blue); color: var(--blue); }
+.img-size-btn.on { border-color: var(--blue); background: color-mix(in srgb, var(--blue) 12%, #fff); color: var(--blue); }
+
+===== END builder.css =====
+
+Here are the React block components (blocks.jsx) so you can see exact class names used:
+
+===== blocks.jsx =====
+/* ============================================================
+   Course Builder — Editable helper + block renderers
+   ============================================================ */
+const { useState, useRef, useEffect } = React;
+
+/* ---------- inline-editable text ---------- */
+function Editable({ html, tag, className, placeholder, onCommit, editing, rich, style }) {
+  const ref = useRef(null);
+  const Tag = tag || 'div';
+  useEffect(() => {
+    if (editing && ref.current && document.activeElement !== ref.current) {
+      if (ref.current.innerHTML !== (html || '')) ref.current.innerHTML = html || '';
+    }
+  }, [html, editing]);
+  if (!editing) {
+    return <Tag className={className} style={style} dangerouslySetInnerHTML={{ __html: html || '' }}></Tag>;
+  }
+  return (
+    <Tag
+      ref={ref}
+      className={(className || '') + (placeholder ? ' edit-empty' : '')}
+      data-editable="true"
+      data-ph={placeholder || ''}
+      data-rich={rich ? 'true' : undefined}
+      contentEditable
+      suppressContentEditableWarning
+      style={style}
+      onBlur={(e) => onCommit(e.currentTarget.innerHTML)}
+      onKeyDown={(e) => {
+        if (!rich && e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); }
+      }}
+      dangerouslySetInnerHTML={{ __html: html || '' }}
+    ></Tag>
+  );
+}
+
+/* ---------- embed url parsing ---------- */
+function parseEmbed(url) {
+  if (!url) return null;
+  let m;
+  if ((m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]+)/))) return { type: 'iframe', src: 'https://www.youtube.com/embed/' + m[1] };
+  if ((m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/))) return { type: 'iframe', src: 'https://player.vimeo.com/video/' + m[1] };
+  if (/\.(mp4|webm|ogg)(\?|$)/i.test(url)) return { type: 'video', src: url };
+  return { type: 'iframe', src: url };
+}
+
+/* ---------- small UI helpers ---------- */
+function Swatches({ value, onChange }) {
+  return (
+    <div className="swatchrow">
+      {ACCENTS.map(a => (
+        <button key={a.key} type="button" className={'swatch' + (value === a.key ? ' on' : '')}
+          style={{ background: a.color }} onClick={() => onChange(a.key)} aria-label={a.key}></button>
+      ))}
+    </div>
+  );
+}
+function Seg({ value, options, onChange }) {
+  return (
+    <div className="seg">
+      {options.map(o => (
+        <button key={o.value} type="button" className={value === o.value ? 'on' : ''} onClick={() => onChange(o.value)}>{o.label}</button>
+      ))}
+    </div>
+  );
+}
+function IconPicker({ value, onChange }) {
+  return (
+    <div className="iconpick">
+      {FLIP_ICONS.map(name => (
+        <button key={name} type="button" className={'iconpick__btn' + (value === name ? ' on' : '')}
+          onClick={() => onChange(name)} aria-label={name}><Icon name={name} size={18} /></button>
+      ))}
+    </div>
+  );
+}
+
+/* ============================================================
+   HEADING
+   ============================================================ */
+function HeadingBlock({ block, editing, onChange }) {
+  const Tag = block.level === 'h3' ? 'h3' : 'h2';
+  return (
+    <div className="blk-heading">
+      {(editing || block.eyebrow) && (
+        <div className="eyebrow"><span className="dot"></span>
+          <Editable tag="span" editing={editing} html={block.eyebrow} placeholder="Eyebrow (optional)"
+            onCommit={(v) => onChange({ ...block, eyebrow: v })} />
+        </div>
+      )}
+      <Editable tag={Tag} editing={editing} html={block.text} placeholder="Heading text"
+        onCommit={(v) => onChange({ ...block, text: v })} />
+      {editing && (
+        <div className="editpanel">
+          <div className="editpanel__title"><Icon name="heading" size={14} /> Heading options</div>
+          <div className="field">
+            <span className="field__lab">Size</span>
+            <Seg value={block.level} options={[{ value: 'h2', label: 'Large' }, { value: 'h3', label: 'Medium' }]}
+              onChange={(v) => onChange({ ...block, level: v })} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   TEXT
+   ============================================================ */
+function TextBlock({ block, editing, onChange }) {
+  return (
+    <Editable className="blk-text" editing={editing} rich html={block.html} placeholder="Write something…"
+      onCommit={(v) => onChange({ ...block, html: v })} />
+  );
+}
+
+/* ============================================================
+   IMAGE
+   ============================================================ */
+const IMG_SIZE_PRESETS = [
+  { label: 'Small (40%)',  value: '40%' },
+  { label: 'Medium (65%)', value: '65%' },
+  { label: 'Large (85%)',  value: '85%' },
+  { label: 'Full width',   value: '100%' },
+];
+
+function ImageBlock({ block, editing, onChange }) {
+  const fileRef = useRef(null);
+  const imgWidth = block.imgWidth || '100%';
+  function onFile(e) {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => onChange({ ...block, src: r.result });
+    r.readAsDataURL(f);
+  }
+  return (
+    <div className="blk-image">
+      <figure style={{ maxWidth: imgWidth, margin: imgWidth === '100%' ? undefined : '0 auto' }}>
+        {block.src
+          ? <img src={block.src} alt={block.alt || ''} style={{ width: '100%' }} />
+          : <div className="img-placeholder"><Icon name="image" size={30} />{editing ? 'Add an image below' : 'No image'}</div>}
+        {(block.caption || editing) && (
+          <Editable tag="figcaption" editing={editing} html={block.caption} placeholder="Caption (optional)"
+            onCommit={(v) => onChange({ ...block, caption: v })} />
+        )}
+      </figure>
+      {editing && (
+        <div className="editpanel">
+          <div className="editpanel__title"><Icon name="image" size={14} /> Image source</div>
+          <div className="field">
+            <span className="field__lab">Image URL</span>
+            <input className="inp" value={block.src && block.src.startsWith('data:') ? '' : block.src}
+              placeholder="https://… or upload a file"
+              onChange={(e) => onChange({ ...block, src: e.target.value })} />
+          </div>
+          <div className="field">
+            <button type="button" className="miniadd" onClick={() => fileRef.current && fileRef.current.click()}>
+              <Icon name="upload" size={15} /> Upload image
+            </button>
+            <input ref={fileRef} type="file" accept="image/*" hidden onChange={onFile} />
+            {block.src && block.src.startsWith('data:') && <span style={{ marginLeft: 10, fontSize: 13, color: 'var(--gray)' }}>Uploaded ✓</span>}
+          </div>
+          <div className="field">
+            <span className="field__lab">Alt text (accessibility)</span>
+            <input className="inp" value={block.alt} placeholder="Describe the image"
+              onChange={(e) => onChange({ ...block, alt: e.target.value })} />
+          </div>
+          <div className="field">
+            <span className="field__lab">Image size</span>
+            <div className="img-size-row">
+              {IMG_SIZE_PRESETS.map(p => (
+                <button key={p.value} type="button"
+                  className={'img-size-btn' + (imgWidth === p.value ? ' on' : '')}
+                  onClick={() => onChange({ ...block, imgWidth: p.value })}>
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+              <span className="field__lab" style={{ margin: 0, whiteSpace: 'nowrap' }}>Custom %</span>
+              <input className="inp" type="number" min="10" max="100" style={{ width: 80 }}
+                value={parseInt(imgWidth, 10) || 100}
+                onChange={(e) => {
+                  const v = Math.min(100, Math.max(10, parseInt(e.target.value, 10) || 100));
+                  onChange({ ...block, imgWidth: v + '%' });
+                }} />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   EMBED / VIDEO
+   ============================================================ */
+function EmbedBlock({ block, editing, onChange }) {
+  const fileRef = useRef(null);
+  function onFile(e) {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => onChange({ ...block, upload: r.result });
+    r.readAsDataURL(f);
+  }
+  const parsed = (block.mode === 'code' || block.mode === 'upload') ? null : parseEmbed(block.url);
+  return (
+    <div className="blk-embed">
+      {block.mode === 'code' && block.code ? (
+        <div className="embed-frame" dangerouslySetInnerHTML={{ __html: block.code }}></div>
+      ) : block.mode === 'upload' && block.upload ? (
+        <div className="embed-frame"><video src={block.upload} controls></video></div>
+      ) : parsed ? (
+        parsed.type === 'video'
+          ? <div className="embed-frame"><video src={parsed.src} controls></video></div>
+          : <div className="embed-frame"><iframe src={parsed.src} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe></div>
+      ) : (
+        <div className="embed-placeholder"><Icon name="play" size={34} />{editing ? 'Add a video or embed below' : 'No media'}</div>
+      )}
+      {(block.caption || editing) && (
+        <Editable tag="div" className="embed-caption" editing={editing} html={block.caption} placeholder="Caption (optional)"
+          onCommit={(v) => onChange({ ...block, caption: v })} />
+      )}
+      {editing && (
+        <div className="editpanel">
+          <div className="editpanel__title"><Icon name="play" size={14} /> Media source</div>
+          <div className="field">
+            <Seg value={block.mode} options={[{ value: 'upload', label: 'Upload video' }, { value: 'video', label: 'Video link' }, { value: 'code', label: 'Embed code' }]}
+              onChange={(v) => onChange({ ...block, mode: v })} />
+          </div>
+          {block.mode === 'code' ? (
+            <div className="field">
+              <span className="field__lab">Paste embed / iframe code</span>
+              <textarea className="ta" value={block.code} placeholder="<iframe …></iframe>"
+                onChange={(e) => onChange({ ...block, code: e.target.value })}></textarea>
+            </div>
+          ) : block.mode === 'upload' ? (
+            <div className="field">
+              <button type="button" className="miniadd" onClick={() => fileRef.current && fileRef.current.click()}>
+                <Icon name="upload" size={15} /> {block.upload ? 'Replace video' : 'Upload video file'}
+              </button>
+              <input ref={fileRef} type="file" accept="video/*" hidden onChange={onFile} />
+              {block.upload && <span style={{ marginLeft: 10, fontSize: 13, color: 'var(--gray)' }}>Uploaded ✓</span>}
+              <p style={{ fontSize: 12.5, color: 'var(--gray)', margin: '8px 0 0' }}>MP4 or WebM works best. Large files increase the course size.</p>
+            </div>
+          ) : (
+            <div className="field">
+              <span className="field__lab">YouTube, Vimeo, or MP4 link</span>
+              <input className="inp" value={block.url} placeholder="https://youtu.be/… or https://….mp4"
+                onChange={(e) => onChange({ ...block, url: e.target.value })} />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   STATEMENT / CALLOUT / QUOTE
+   ============================================================ */
+function StatementBlock({ block, editing, onChange }) {
+  const style = { '--accent': accentColor(block.accent) };
+  return (
+    <div className="blk-statement">
+      <div className={'statement ' + block.variant} style={style}>
+        {block.variant === 'quote' ? (
+          <Editable className="statement__text" editing={editing} html={block.text} placeholder="Quote or statement…"
+            onCommit={(v) => onChange({ ...block, text: v })} />
+        ) : (
+          <React.Fragment>
+            {(block.label || editing) && (
+              <Editable className="statement__label" editing={editing} html={block.label} placeholder="LABEL"
+                onCommit={(v) => onChange({ ...block, label: v })} />
+            )}
+            {(block.title || editing) && (
+              <Editable className="statement__title" editing={editing} html={block.title} placeholder="Title (optional)"
+                onCommit={(v) => onChange({ ...block, title: v })} />
+            )}
+            <Editable className="statement__text" editing={editing} rich html={block.text} placeholder="Statement text…"
+              onCommit={(v) => onChange({ ...block, text: v })} />
+          </React.Fragment>
+        )}
+      </div>
+      {editing && (
+        <div className="editpanel">
+          <div className="editpanel__title"><Icon name="quote" size={14} /> Style</div>
+          <div className="field">
+            <Seg value={block.variant} options={[{ value: 'callout', label: 'Callout' }, { value: 'quote', label: 'Quote' }]}
+              onChange={(v) => onChange({ ...block, variant: v })} />
+          </div>
+          <div className="field">
+            <span className="field__lab">Accent colour</span>
+            <Swatches value={block.accent} onChange={(v) => onChange({ ...block, accent: v })} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   FLIP CARDS
+   ============================================================ */
+function FlipBlock({ block, editing, onChange }) {
+  const [flipped, setFlipped] = useState({});
+  function toggle(id) { setFlipped(f => ({ ...f, [id]: !f[id] })); }
+  function setCard(i, patch) {
+    const cards = block.cards.map((c, j) => j === i ? { ...c, ...patch } : c);
+    onChange({ ...block, cards });
+  }
+  function addCard() { onChange({ ...block, cards: [...block.cards, { id: uid('c'), accent: 'blue', front: 'New card', back: 'Definition.' }] }); }
+  function delCard(i) { onChange({ ...block, cards: block.cards.filter((_, j) => j !== i) }); }
+  return (
+    <div className="blk-flip">
+      <div className="flipgrid">
+        {block.cards.map(c => (
+          <button key={c.id} type="button" className={'flip' + (flipped[c.id] ? ' is-flipped' : '')}
+            style={{ '--cardaccent': accentColor(c.accent) }} onClick={() => toggle(c.id)}>
+            <div className="flip__inner">
+              <div className="flip__face flip__front">
+                <div className="flip__icon"><Icon name={c.icon || 'layers'} size={24} /></div>
+                <div className="flip__title" dangerouslySetInnerHTML={{ __html: c.front }}></div>
+                <div className="flip__hint"><Icon name="reset" size={13} /> Hover or tap to flip</div>
+              </div>
+              <div className="flip__face flip__back">
+                {c.kicker ? <div className="flip__kicker" dangerouslySetInnerHTML={{ __html: c.kicker }}></div> : null}
+                <div className="flip__backtitle" dangerouslySetInnerHTML={{ __html: c.front }}></div>
+                <p dangerouslySetInnerHTML={{ __html: c.back }}></p>
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
+      {editing && (
+        <div className="editpanel">
+          <div className="editpanel__title"><Icon name="flip" size={14} /> Cards</div>
+          {block.cards.map((c, i) => (
+            <div className="subitem" key={c.id}>
+              <button type="button" className="subitem__del" onClick={() => delCard(i)} aria-label="Delete card"><Icon name="trash" size={14} /></button>
+              <div className="subitem__num">Card {i + 1}</div>
+              <div className="field">
+                <span className="field__lab">Front (term)</span>
+                <input className="inp" value={c.front} onChange={(e) => setCard(i, { front: e.target.value })} />
+              </div>
+              <div className="field">
+                <span className="field__lab">Back kicker (optional)</span>
+                <input className="inp" value={c.kicker || ''} placeholder="e.g. The physical foundation" onChange={(e) => setCard(i, { kicker: e.target.value })} />
+              </div>
+              <div className="field">
+                <span className="field__lab">Back (definition)</span>
+                <textarea className="ta" value={c.back} onChange={(e) => setCard(i, { back: e.target.value })}></textarea>
+              </div>
+              <div className="field">
+                <span className="field__lab">Icon</span>
+                <IconPicker value={c.icon || 'layers'} onChange={(v) => setCard(i, { icon: v })} />
+              </div>
+              <div className="field">
+                <span className="field__lab">Accent</span>
+                <Swatches value={c.accent} onChange={(v) => setCard(i, { accent: v })} />
+              </div>
+            </div>
+          ))}
+          <button type="button" className="miniadd" onClick={addCard}><Icon name="plus" size={15} /> Add card</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   TABS
+   ============================================================ */
+function TabsBlock({ block, editing, onChange }) {
+  const [active, setActive] = useState(0);
+  const cur = Math.min(active, block.items.length - 1);
+  function setItem(i, patch) { onChange({ ...block, items: block.items.map((t, j) => j === i ? { ...t, ...patch } : t) }); }
+  function addItem() { onChange({ ...block, items: [...block.items, { id: uid('t'), label: 'New tab', html: 'Tab content.' }] }); }
+  function delItem(i) {
+    const items = block.items.filter((_, j) => j !== i);
+    onChange({ ...block, items });
+    if (cur >= items.length) setActive(Math.max(0, items.length - 1));
+  }
+  return (
+    <div className="blk-tabs" data-tabs>
+      <div className="tabs__list">
+        {block.items.map((t, i) => (
+          <button key={t.id} type="button" className={'tab' + (i === cur ? ' is-active' : '')}
+            onClick={() => setActive(i)} dangerouslySetInnerHTML={{ __html: t.label }}></button>
+        ))}
+      </div>
+      {block.items[cur] && (
+        <Editable key={block.items[cur].id} className="tabpanel" editing={editing} rich html={block.items[cur].html}
+          placeholder="Tab content…" onCommit={(v) => setItem(cur, { html: v })} />
+      )}
+      {editing && (
+        <div className="editpanel">
+          <div className="editpanel__title"><Icon name="tabs" size={14} /> Tabs · editing content for the active tab above</div>
+          {block.items.map((t, i) => (
+            <div className="field" key={t.id} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input className="inp" value={t.label} onChange={(e) => setItem(i, { label: e.target.value })} placeholder={'Tab ' + (i + 1) + ' label'} />
+              <button type="button" className="subitem__del" style={{ position: 'static' }} onClick={() => delItem(i)} aria-label="Delete tab"><Icon name="trash" size={14} /></button>
+            </div>
+          ))}
+          <button type="button" className="miniadd" onClick={addItem}><Icon name="plus" size={15} /> Add tab</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   ACCORDION
+   ============================================================ */
+function AccordionBlock({ block, editing, onChange }) {
+  const [open, setOpen] = useState({});
+  const style = { '--accent': accentColor(block.accent) };
+  function setItem(i, patch) { onChange({ ...block, items: block.items.map((t, j) => j === i ? { ...t, ...patch } : t) }); }
+  function addItem() { onChange({ ...block, items: [...block.items, { id: uid('a'), title: 'New item', html: 'Hidden content.' }] }); }
+  function delItem(i) { onChange({ ...block, items: block.items.filter((_, j) => j !== i) }); }
+  return (
+    <div className="blk-accordion" style={style}>
+      <div className="accordion">
+        {block.items.map((it, i) => (
+          <div className={'acc' + (open[it.id] ? ' is-open' : '')} key={it.id}>
+            <button type="button" className="acc__head" onClick={() => setOpen(o => ({ ...o, [it.id]: !o[it.id] }))}>
+              <span className="acc__marker"></span>
+              <span className="acc__htext">
+                <span className="acc__title" dangerouslySetInnerHTML={{ __html: it.title }}></span>
+                {it.sub ? <span className="acc__sub" dangerouslySetInnerHTML={{ __html: it.sub }}></span> : null}
+              </span>
+              <Icon name="down" className="acc__chev" />
+            </button>
+            <div className="acc__body"><div className="acc__bodyinner">
+              <Editable className="acc__content" editing={editing} rich html={it.html} placeholder="Content…"
+                onCommit={(v) => setItem(i, { html: v })} />
+            </div></div>
+          </div>
+        ))}
+      </div>
+      {editing && (
+        <div className="editpanel">
+          <div className="editpanel__title"><Icon name="accordion" size={14} /> Accordion</div>
+          <div className="field">
+            <span className="field__lab">Accent colour</span>
+            <Swatches value={block.accent} onChange={(v) => onChange({ ...block, accent: v })} />
+          </div>
+          {block.items.map((it, i) => (
+            <div className="field" key={it.id} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input className="inp" value={it.title} onChange={(e) => setItem(i, { title: e.target.value })} placeholder={'Item ' + (i + 1) + ' title'} />
+              <input className="inp" value={it.sub || ''} onChange={(e) => setItem(i, { sub: e.target.value })} placeholder="Subtitle (optional)" />
+              <button type="button" className="subitem__del" style={{ position: 'static' }} onClick={() => delItem(i)} aria-label="Delete item"><Icon name="trash" size={14} /></button>
+            </div>
+          ))}
+          <button type="button" className="miniadd" onClick={addItem}><Icon name="plus" size={15} /> Add item</button>
+          <p style={{ fontSize: 12.5, color: 'var(--gray)', margin: '12px 0 0' }}>Open a row above to edit its content inline.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   MULTIPLE CHOICE
+   ============================================================ */
+function McqBlock({ block, editing, onChange, answer, onAnswer }) {
+  const chosen = answer && answer.val;
+  const style = { '--accent': accentColor('magenta') };
+  function setOpt(i, patch) { onChange({ ...block, options: block.options.map((o, j) => j === i ? { ...o, ...patch } : o) }); }
+  function addOpt() { onChange({ ...block, options: [...block.options, { id: uid('o'), text: 'New option', feedback: '' }] }); }
+  function delOpt(i) {
+    const o = block.options[i];
+    const patch = { options: block.options.filter((_, j) => j !== i) };
+    if (block.correct === o.id) patch.correct = null;
+    onChange({ ...block, ...patch });
+  }
+  const answered = !editing && !!chosen;
+  return (
+    <div className="blk-mcq">
+      <div className="mcq" style={style}>
+        <div className="mcq__tag"><Icon name="check" size={15} /> {block.graded ? 'Knowledge check' : 'Quick check'}</div>
+        <Editable className="mcq__q" editing={editing} html={block.question} placeholder="Question…"
+          onCommit={(v) => onChange({ ...block, question: v })} />
+        <div className="mc-opts">
+          {block.options.map((o, i) => {
+            const isCorrect = block.correct === o.id;
+            let cls = 'mc-opt';
+            if (answered) {
+              if (isCorrect) cls += ' is-correct';
+              else if (o.id === chosen) cls += ' is-wrong';
+              else cls += ' is-dim';
+              cls += ' is-answered';
+            }
+            return (
+              <div key={o.id} className={cls} role="button" tabIndex={editing || answered ? -1 : 0}
+                onClick={() => { if (!editing && !answered) onAnswer(block.id, o.id); }}
+                onKeyDown={(e) => { if (!editing && !answered && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onAnswer(block.id, o.id); } }}>
+                <span className="mc-opt__radio" data-letter={'ABCDEFGH'[i]}>{answered && (isCorrect || o.id === chosen) && <Icon name={isCorrect ? 'check' : 'close'} size={13} />}</span>
+                <Editable tag="span" editing={editing} html={o.text} placeholder="Option text"
+                  onCommit={(v) => setOpt(i, { text: v })} style={{ flex: 1 }} />
+                {editing && (
+                  <button type="button" className={'correct-toggle' + (isCorrect ? ' on' : '')}
+                    onClick={(e) => { e.stopPropagation(); onChange({ ...block, correct: o.id }); }}>
+                    <Icon name="check" size={13} /> {isCorrect ? 'Correct' : 'Mark correct'}
+                  </button>
+                )}
+                {editing && block.options.length > 2 && (
+                  <button type="button" className="subitem__del" style={{ position: 'static' }} onClick={(e) => { e.stopPropagation(); delOpt(i); }} aria-label="Delete option"><Icon name="trash" size={13} /></button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        {answered && (() => {
+          const ch = block.options.find(o => o.id === chosen);
+          const ok = chosen === block.correct;
+          return <div className={'mc-fb show ' + (ok ? 'ok' : 'no')}><b>{ok ? 'Correct. ' : 'Not quite. '}</b>{ch && ch.feedback}</div>;
+        })()}
+      </div>
+      {editing && (
+        <div className="editpanel">
+          <div className="editpanel__title"><Icon name="check" size={14} /> Question setup</div>
+          {block.correct == null && <p style={{ fontSize: 13, color: 'var(--wrong)', margin: '0 0 12px', fontWeight: 600 }}>⚠ Mark which option is correct using the buttons above.</p>}
+          {block.options.map((o, i) => (
+            <div className="field" key={o.id}>
+              <span className="field__lab">Feedback for “{o.text.replace(/<[^>]+>/g, '') || ('Option ' + (i + 1))}”</span>
+              <input className="inp" value={o.feedback} placeholder="Shown when this option is picked"
+                onChange={(e) => setOpt(i, { feedback: e.target.value })} />
+            </div>
+          ))}
+          <button type="button" className="miniadd" onClick={addOpt}><Icon name="plus" size={15} /> Add option</button>
+          <div className="field" style={{ marginTop: 16 }}>
+            <label className={'correct-toggle' + (block.graded ? ' on' : '')} style={{ borderColor: block.graded ? 'var(--blue)' : undefined, background: block.graded ? 'color-mix(in srgb,var(--blue) 12%,#fff)' : undefined, color: block.graded ? 'var(--blue)' : undefined }}>
+              <input type="checkbox" checked={block.graded} onChange={(e) => onChange({ ...block, graded: e.target.checked })} style={{ display: 'none' }} />
+              <Icon name="award" size={14} /> {block.graded ? 'Counts toward score' : 'Practice only (not scored)'}
+            </label>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   DIVIDER
+   ============================================================ */
+function DividerBlock({ block, editing, onChange }) {
+  return (
+    <div className="blk-divider">
+      {block.style === 'space' ? <div style={{ height: 40 }}></div> : <hr />}
+      {editing && (
+        <div className="editpanel">
+          <div className="editpanel__title"><Icon name="divider" size={14} /> Divider</div>
+          <Seg value={block.style} options={[{ value: 'line', label: 'Line' }, { value: 'space', label: 'Blank space' }]}
+            onChange={(v) => onChange({ ...block, style: v })} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   DISPATCH
+   ============================================================ */
+const BLOCK_COMPONENTS = {
+  heading: HeadingBlock, text: TextBlock, image: ImageBlock, embed: EmbedBlock,
+  statement: StatementBlock, flip: FlipBlock, tabs: TabsBlock, accordion: AccordionBlock,
+  mcq: McqBlock, divider: DividerBlock,
+};
+function BlockBody(props) {
+  const extra = (typeof window !== 'undefined' && window.EXTRA_BLOCKS) || {};
+  const C = BLOCK_COMPONENTS[props.block.type] || extra[props.block.type] || TextBlock;
+  return <C {...props} />;
+}
+
+Object.assign(window, { Editable, parseEmbed, Swatches, Seg, IconPicker, BlockBody });
+
+
+export {}; // marks this file as an ES module for Vite
+
+===== END blocks.jsx =====
+
+Here is lesson.jsx (BlockShell, Inserter, LessonView):
+
+===== lesson.jsx =====
+/* ============================================================
+   Course Builder — Lesson view, block shell, block picker
+   ============================================================ */
+
+/* ---------- block picker modal ---------- */
+function BlockPicker({ onPick, onClose }) {
+  const groups = {};
+  BLOCK_LIBRARY.forEach(b => { (groups[b.group] = groups[b.group] || []).push(b); });
+  return (
+    <div className="modal-veil" onClick={onClose}>
+      <div className="picker" onClick={e => e.stopPropagation()}>
+        <div className="picker__head">
+          <h3>Add a block</h3>
+          <button className="picker__close" onClick={onClose} aria-label="Close"><Icon name="close" /></button>
+        </div>
+        <div className="picker__body">
+          {Object.keys(groups).map(g => (
+            <div key={g}>
+              <div className="picker__group">{g}</div>
+              <div className="picker__grid">
+                {groups[g].map(b => (
+                  <button key={b.type} className="pickcard" onClick={() => onPick(b.type)}>
+                    <span className="pickcard__icon"><Icon name={b.icon} size={20} /></span>
+                    <span className="pickcard__label">{b.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- inserter between blocks ---------- */
+function Inserter({ onClick, big }) {
+  return (
+    <div className={'inserter' + (big ? ' inserter--big' : '')}>
+      <div className="inserter__line"></div>
+      <button className="inserter__btn" onClick={onClick}>
+        <Icon name="plus" size={big ? 16 : 16} />{big && <span>Add block</span>}
+      </button>
+    </div>
+  );
+}
+
+/* ---------- review / comment panel (edit mode only) ---------- */
+function ReviewPanel({ block, onChange }) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState('');
+  const reviews = block.reviews || [];
+
+  function addReview() {
+    const text = draft.trim();
+    if (!text) return;
+    const updated = [...reviews, { id: uid('rv'), text, ts: new Date().toISOString() }];
+    onChange({ ...block, reviews: updated });
+    setDraft('');
+  }
+
+  function delReview(id) {
+    onChange({ ...block, reviews: reviews.filter(r => r.id !== id) });
+  }
+
+  return (
+    <div className="review-panel">
+      <button type="button" className={'review-toggle' + (open ? ' open' : '') + (reviews.length ? ' has-items' : '')}
+        onClick={() => setOpen(o => !o)}>
+        <Icon name="quote" size={13} />
+        {reviews.length > 0 ? reviews.length + ' comment' + (reviews.length !== 1 ? 's' : '') : 'Add comment'}
+        <Icon name={open ? 'up' : 'down'} size={12} />
+      </button>
+      {open && (
+        <div className="review-panel__body">
+          {reviews.map(r => (
+            <div className="review-item" key={r.id}>
+              <p className="review-item__text">{r.text}</p>
+              <div className="review-item__meta">
+                <span>{new Date(r.ts).toLocaleString()}</span>
+                <button type="button" onClick={() => delReview(r.id)} aria-label="Delete comment"><Icon name="trash" size={12} /></button>
+              </div>
+            </div>
+          ))}
+          <div className="review-compose">
+            <textarea className="review-compose__input" value={draft} placeholder="Leave a comment or feedback…"
+              onChange={e => setDraft(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) addReview(); }} />
+            <button type="button" className="review-compose__send" onClick={addReview} disabled={!draft.trim()}>
+              <Icon name="arrowRight" size={14} /> Post
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------- block wrapper with author controls ---------- */
+function BlockShell({ block, index, total, editing, onChange, onMove, onDuplicate, onRemove, answer, onAnswer }) {
+  const label = (BLOCK_LIBRARY.find(b => b.type === block.type) || {}).label || block.type;
+  const revealProps = !editing ? { 'data-reveal': '', 'data-delay': String(Math.min(index * 80, 400)) } : {};
+  return (
+    <div className="blockwrap" {...revealProps}>
+      {editing && <span className="block-tag">{label}</span>}
+      {editing && (
+        <div className="block-toolbar">
+          <button onClick={() => onMove(index, -1)} disabled={index === 0} aria-label="Move up" style={{ opacity: index === 0 ? .4 : 1 }}><Icon name="up" size={15} /></button>
+          <button onClick={() => onMove(index, 1)} disabled={index === total - 1} aria-label="Move down" style={{ opacity: index === total - 1 ? .4 : 1 }}><Icon name="down" size={15} /></button>
+          <span className="sep"></span>
+          <button onClick={() => onDuplicate(index)} aria-label="Duplicate"><Icon name="copy" size={15} /></button>
+          <button className="danger" onClick={() => onRemove(index)} aria-label="Delete"><Icon name="trash" size={15} /></button>
+        </div>
+      )}
+      <div className="block-body">
+        <BlockBody block={block} editing={editing} onChange={onChange} answer={answer} onAnswer={onAnswer} />
+      </div>
+      {editing && <ReviewPanel block={block} onChange={onChange} />}
+    </div>
+  );
+}
+
+/* ---------- the lesson ---------- */
+function LessonView({ lesson, index, editing, onChangeLesson, answers, onAnswer,
+                      onPrev, onContinue, isFirst, isLast, completed, accent }) {
+  const [picker, setPicker] = useState(null); // insert index or null
+  const canvasRef = useRef(null);
+  const blocks = lesson.blocks || [];
+
+  // Bidirectional scroll-reveal — elements glide in on enter, reverse on leave
+  useEffect(() => {
+    if (editing) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const reveals = canvas.querySelectorAll('[data-reveal]');
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        const el = en.target;
+        if (el._rt) { clearTimeout(el._rt); el._rt = null; }
+        if (en.isIntersecting) {
+          const delay = parseFloat(el.dataset.delay || '0');
+          el._rt = setTimeout(() => el.classList.add('is-visible'), delay);
+        } else {
+          el.classList.remove('is-visible');
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+    reveals.forEach(el => io.observe(el));
+    return () => io.disconnect();
+  }, [lesson.id, editing]);
+
+  function update(i, nb) { const b = blocks.slice(); b[i] = nb; onChangeLesson({ ...lesson, blocks: b }); }
+  function move(i, dir) {
+    const j = i + dir; if (j < 0 || j >= blocks.length) return;
+    const b = blocks.slice(); const t = b[i]; b[i] = b[j]; b[j] = t;
+    onChangeLesson({ ...lesson, blocks: b });
+  }
+  function duplicate(i) {
+    const copy = JSON.parse(JSON.stringify(blocks[i])); copy.id = uid('b');
+    const b = blocks.slice(); b.splice(i + 1, 0, copy); onChangeLesson({ ...lesson, blocks: b });
+  }
+  function remove(i) {
+    const b = blocks.slice(); b.splice(i, 1); onChangeLesson({ ...lesson, blocks: b });
+  }
+  function insert(type) {
+    const b = blocks.slice(); b.splice(picker, 0, newBlock(type));
+    onChangeLesson({ ...lesson, blocks: b }); setPicker(null);
+  }
+
+  const style = { '--accent': accent };
+  return (
+    <div className="canvas" style={style} ref={canvasRef}>
+      <div className="lessonhead" {...(!editing ? { 'data-reveal': '', 'data-delay': '0' } : {})}>
+        <div className="lessonhead__kicker"><span className="dot"></span>
+          {editing
+            ? <Editable tag="span" editing html={lesson.title} placeholder="Lesson title"
+                onCommit={(v) => onChangeLesson({ ...lesson, title: v.replace(/<[^>]+>/g, '') })} />
+            : <span>Lesson {index}</span>}
+        </div>
+        <h1 dangerouslySetInnerHTML={{ __html: lesson.title }}></h1>
+      </div>
+
+      <div className="blocks">
+        {blocks.length === 0 && !editing && (
+          <div className="empty-hint"><div className="ic"><Icon name="book" size={26} /></div>This lesson is empty.</div>
+        )}
+        {blocks.map((blk, i) => (
+          <React.Fragment key={blk.id}>
+            {editing && <Inserter onClick={() => setPicker(i)} />}
+            <BlockShell block={blk} index={i} total={blocks.length} editing={editing}
+              onChange={(nb) => update(i, nb)} onMove={move} onDuplicate={duplicate} onRemove={remove}
+              answer={answers[blk.id]} onAnswer={onAnswer} />
+          </React.Fragment>
+        ))}
+        {editing && <Inserter big onClick={() => setPicker(blocks.length)} />}
+      </div>
+
+      {/* footer */}
+      {!editing && (
+        <div className="lessonfoot">
+          <button className="lessonfoot__prev" onClick={onPrev} disabled={isFirst} style={{ visibility: isFirst ? 'hidden' : 'visible' }}>
+            <Icon name="arrowLeft" size={17} /> Previous
+          </button>
+          <span className="lessonfoot__spacer"></span>
+          <button className={'lessonfoot__cta' + (completed ? ' done' : '') + (isLast ? ' finish' : '')} onClick={onContinue}>
+            {isLast ? <React.Fragment>Finish course <Icon name="award" size={18} /></React.Fragment>
+                    : <React.Fragment>{completed ? 'Next lesson' : 'Complete & continue'} <Icon name="arrowRight" size={18} /></React.Fragment>}
+          </button>
+        </div>
+      )}
+
+      {picker !== null && <BlockPicker onPick={insert} onClose={() => setPicker(null)} />}
+    </div>
+  );
+}
+
+Object.assign(window, { BlockPicker, Inserter, BlockShell, LessonView });
+
+
+export {}; // marks this file as an ES module for Vite
+
+===== END lesson.jsx =====
+
+Please output ONLY the new CSS to append to builder.css — the `body:not(.editing)` overrides for all the block types listed above. No explanation, no markdown fences, just valid CSS ready to paste.
