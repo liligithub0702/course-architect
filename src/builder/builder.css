@@ -35,6 +35,8 @@
   --shadow-lg: 0 18px 50px rgba(26,24,66,.18);
 
   --sidebar-w: 312px;
+  --sidebar-from: #1A1842;
+  --sidebar-to: #211F4E;
   --accent: var(--indigo);
   --font: 'Hanken Grotesk', 'Arial', system-ui, sans-serif;
 }
@@ -63,7 +65,7 @@ button { font-family: inherit; }
 /* -------- Sidebar -------- */
 .sidebar {
   width: var(--sidebar-w); flex: none;
-  background: linear-gradient(180deg, #1A1842 0%, #211F4E 100%);
+  background: linear-gradient(180deg, var(--sidebar-from) 0%, var(--sidebar-to) 100%);
   color: #fff;
   display: flex; flex-direction: column;
   position: sticky; top: 0; height: 100vh;

@@ -31,6 +31,15 @@ function saveProgress(p) {
   try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); } catch (e) {}
 }
 
+/* ---------- theme presets ---------- */
+const THEMES = [
+  { key: 'classic',  name: 'Classic',   indigo: '#26235D', indigodeep: '#1A1842', magenta: '#DE1B54', blue: '#2E79BB', sidebarFrom: '#1A1842', sidebarTo: '#211F4E' },
+  { key: 'ocean',    name: 'Ocean',     indigo: '#0a3055', indigodeep: '#071e38', magenta: '#00b8a9', blue: '#0090d1', sidebarFrom: '#091e38', sidebarTo: '#0d2b4d' },
+  { key: 'forest',   name: 'Forest',    indigo: '#1e3a1e', indigodeep: '#122012', magenta: '#c7a329', blue: '#38a169', sidebarFrom: '#112211', sidebarTo: '#1a3020' },
+  { key: 'sunset',   name: 'Sunset',    indigo: '#3d1a1a', indigodeep: '#2a0f0f', magenta: '#f5a623', blue: '#e05c3a', sidebarFrom: '#2a1010', sidebarTo: '#3d1818' },
+  { key: 'midnight', name: 'Midnight',  indigo: '#1a1a2e', indigodeep: '#0d0d1a', magenta: '#ff6b9d', blue: '#7c6aff', sidebarFrom: '#0d0d1a', sidebarTo: '#1a1a2e' },
+];
+
 /* ---------- accent palette (brand) ---------- */
 const ACCENTS = [
   { key: 'blue',    color: '#2E79BB' },
@@ -168,6 +177,7 @@ function blankCourse() {
       kicker: 'Training · Self-paced',
       cover: '',
       accent: 'indigo',
+      theme: { preset: 'classic' },
       facts: [
         { k: 'Delivery', v: 'Self-paced' },
         { k: 'Duration', v: '60 minutes' },
@@ -278,7 +288,7 @@ function Icon({ name, size, stroke, fill, style, className }) {
 Object.assign(window, {
   STORE_KEY, PROGRESS_KEY, uid,
   loadCourse, saveCourse, loadProgress, saveProgress,
-  ACCENTS, accentColor, newBlock, BLOCK_LIBRARY, defaultCourse, blankCourse,
+  THEMES, ACCENTS, accentColor, newBlock, BLOCK_LIBRARY, defaultCourse, blankCourse,
   Icon, FLIP_ICONS,
 });
 

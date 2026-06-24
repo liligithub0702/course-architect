@@ -2,6 +2,34 @@
    Course Builder — App shell, cover, completion, rich toolbar
    ============================================================ */
 
+/* ---------- theme picker ---------- */
+function ThemePicker({ value, onChange }) {
+  const current = (value && value.preset) || 'classic';
+  return (
+    <div className="field" style={{ marginTop: 14 }}>
+      <span className="field__lab">Course theme</span>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 10 }}>
+        {THEMES.map(t => (
+          <button key={t.key} onClick={() => onChange({ preset: t.key })} title={t.name}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
+              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+            }}>
+            <span style={{
+              width: 48, height: 36, borderRadius: 8, overflow: 'hidden', display: 'block',
+              boxShadow: current === t.key ? `0 0 0 2.5px #fff, 0 0 0 4.5px ${t.blue}` : '0 1px 4px rgba(0,0,0,.3)',
+            }}>
+              <span style={{ display: 'block', height: '55%', background: `linear-gradient(135deg, ${t.sidebarFrom}, ${t.sidebarTo})` }}></span>
+              <span style={{ display: 'block', height: '45%', background: `linear-gradient(90deg, ${t.blue}, ${t.magenta})` }}></span>
+            </span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: current === t.key ? '#fff' : 'rgba(255,255,255,.6)' }}>{t.name}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ---------- floating rich-text toolbar ---------- */
 function RichToolbar() {
   const [pos, setPos] = useState(null);
@@ -84,6 +112,7 @@ function Cover({ course, editing, onChangeMeta, onStart, accent }) {
             <span className="field__lab">Course accent colour</span>
             <Swatches value={course.meta.accent} onChange={(v) => onChangeMeta({ ...course.meta, accent: v })} />
           </div>
+          <ThemePicker value={course.meta.theme} onChange={(v) => onChangeMeta({ ...course.meta, theme: v })} />
           <p style={{ fontSize: 12.5, color: 'var(--gray)', margin: '12px 0 0' }}>Edit the module label, title, description, and the fact chips directly on the hero above.</p>
         </div>
       )}
@@ -250,6 +279,19 @@ function App() {
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [editing, screen]);
+
+  // apply theme CSS variables
+  useEffect(() => {
+    const t = course.meta.theme || {};
+    const preset = THEMES.find(x => x.key === (t.preset || 'classic')) || THEMES[0];
+    const s = document.documentElement.style;
+    s.setProperty('--indigo', preset.indigo);
+    s.setProperty('--indigo-deep', preset.indigodeep);
+    s.setProperty('--magenta', preset.magenta);
+    s.setProperty('--blue', preset.blue);
+    s.setProperty('--sidebar-from', preset.sidebarFrom);
+    s.setProperty('--sidebar-to', preset.sidebarTo);
+  }, [course.meta.theme]);
 
   // autosave
   useEffect(() => { saveCourse(course); }, [course]);
