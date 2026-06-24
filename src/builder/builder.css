@@ -272,6 +272,8 @@ body.editing .hero2 [data-editable]:hover { background: rgba(255,255,255,.12); }
 /* embed */
 .embed-frame { position: relative; padding-top: 56.25%; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-md); background: #000; }
 .embed-frame iframe, .embed-frame video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.embed-frame--video { padding-top: 0; background: #000; }
+.embed-frame--video video { position: static; width: 100%; height: auto; display: block; max-height: 70vh; }
 .embed-caption { font-size: 13.5px; color: var(--gray); margin-top: 10px; text-align: center; }
 .embed-placeholder {
   border: 2px dashed var(--line-strong); border-radius: var(--radius); background: var(--canvas-2);

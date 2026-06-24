@@ -211,10 +211,10 @@ function EmbedBlock({ block, editing, onChange }) {
       {block.mode === 'code' && block.code ? (
         <div className="embed-frame" dangerouslySetInnerHTML={{ __html: block.code }}></div>
       ) : block.mode === 'upload' && block.upload ? (
-        <div className="embed-frame"><video src={block.upload} controls></video></div>
+        <div className="embed-frame embed-frame--video"><video src={block.upload} controls></video></div>
       ) : parsed ? (
         parsed.type === 'video'
-          ? <div className="embed-frame"><video src={parsed.src} controls></video></div>
+          ? <div className="embed-frame embed-frame--video"><video src={parsed.src} controls></video></div>
           : <div className="embed-frame"><iframe src={parsed.src} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe></div>
       ) : (
         <div className="embed-placeholder"><Icon name="play" size={34} />{editing ? 'Add a video or embed below' : 'No media'}</div>
