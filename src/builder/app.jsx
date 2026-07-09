@@ -536,7 +536,7 @@ function App() {
                     })}
                   </div>
                 )}
-                <span className="topbar--learner__pct"><b ref={progPctRef}>0%</b></span>
+                <span className="topbar--learner__pct" ref={progPctRef}>0%</span>
                 <button className="topbar--learner__editbtn" onClick={() => setEditing(true)} title="Back to editing">
                   <Icon name="edit" size={14} /> Edit
                 </button>
@@ -547,7 +547,7 @@ function App() {
               <button className="topbar__menubtn" onClick={() => document.body.classList.toggle('nav-open')} aria-label="Menu"><Icon name="menu" /></button>
               <div className="topbar__brand">
                 <span className="topbar__brandmark"><Icon name="layers" size={14} stroke="#fff" /></span>
-                <span className="topbar__brandname">Design Studio</span>
+                <span className="topbar__brandname">Design<span style={{ fontWeight: 500, color: 'rgba(255,255,255,0.5)' }}> Studio</span></span>
               </div>
               <div className="topbar__crumb">
                 <span dangerouslySetInnerHTML={{ __html: course.meta.title }}></span>

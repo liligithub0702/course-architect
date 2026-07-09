@@ -27,6 +27,7 @@ function Gate({ children }) {
   const [pw, setPw]             = useState('');
   const [busy, setBusy]         = useState(false);
   const [err, setErr]           = useState('');
+  const [shaking, setShaking]   = useState(false);
 
   // on load: if a password is saved, verify it silently
   useEffect(() => {
@@ -51,6 +52,8 @@ function Gate({ children }) {
       setAuthed(true);
     } else {
       setErr('Incorrect password.');
+      setShaking(true);
+      setTimeout(() => setShaking(false), 450);
     }
   }
 
@@ -61,27 +64,38 @@ function Gate({ children }) {
 
   return (
     <div className="gate">
-      <form className="gate__card" onSubmit={submit}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
-          <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg, #26235D, #1A1842)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="7" height="7" rx="1"/><rect x="15" y="3" width="7" height="7" rx="1"/><rect x="2" y="14" width="7" height="7" rx="1"/><rect x="15" y="14" width="7" height="7" rx="1"/></svg>
-            <span style={{ position: 'absolute', bottom: 8, right: 8, width: 8, height: 8, borderRadius: '50%', background: '#DE1B54', border: '1.5px solid rgba(255,255,255,0.6)' }}></span>
+      <form className={'gate__card' + (shaking ? ' is-shaking' : '')} onSubmit={submit}>
+        <div className="gate__logo-row">
+          <div className="gate__logo-chip" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="3" width="7" height="7" rx="1"/><rect x="15" y="3" width="7" height="7" rx="1"/>
+              <rect x="2" y="14" width="7" height="7" rx="1"/><rect x="15" y="14" width="7" height="7" rx="1"/>
+            </svg>
           </div>
+          <span className="gate__mark">Design Studio</span>
         </div>
-        <div className="gate__mark">Design Studio</div>
         <h1 className="gate__title">Team access</h1>
         <p className="gate__sub">Enter the team password to continue.</p>
-        <input
-          className="gate__input"
-          type="password"
-          autoFocus
-          placeholder="Team password"
-          value={pw}
-          onChange={e => { setPw(e.target.value); setErr(''); }}
-        />
+        <div className="gate__input-wrap">
+          <span className="gate__input-icon" aria-hidden="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </span>
+          <input
+            className={'gate__input' + (err ? ' gate__input--error' : '')}
+            type="password"
+            autoFocus
+            placeholder="Team password"
+            value={pw}
+            onChange={e => { setPw(e.target.value); setErr(''); }}
+          />
+        </div>
         {err && <p className="gate__err">{err}</p>}
         <button className="gate__btn" type="submit" disabled={busy || !pw.trim()}>
-          {busy ? 'Checking…' : 'Enter'}
+          {busy
+            ? <React.Fragment><span className="gate__spinner"></span>Checking…</React.Fragment>
+            : 'Enter'}
         </button>
         <p className="gate__hint">Ask your team lead for the password.</p>
       </form>
