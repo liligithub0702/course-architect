@@ -512,53 +512,48 @@ function App() {
           onToggleEdit={() => setEditing(e => !e)} onImport={() => setShowImporter(true)}
           onExportScorm={() => exportScorm(course)} />
         <div className="main">
-          <header className="topbar" style={{ position: 'sticky', top: 0 }}>
-            <button className="topbar__menubtn" onClick={() => document.body.classList.toggle('nav-open')} aria-label="Menu"><Icon name="menu" /></button>
-            {/* Brand */}
-            <div className="topbar__brand">
-              <span className="topbar__brandmark"><Icon name="layers" size={14} stroke="#fff" /></span>
-              <span className="topbar__brandname">Course Architect</span>
-            </div>
-            {/* Crumb */}
-            <div className="topbar__crumb">
-              <span dangerouslySetInnerHTML={{ __html: course.meta.title }}></span>
-              {editing && <b dangerouslySetInnerHTML={{ __html: crumbTitle }}></b>}
-            </div>
-            <span className="topbar__spacer"></span>
-            {/* Edit / Preview segmented control */}
-            <div className="topbar__seg">
-              <button className={'topbar__seg-btn' + (editing ? ' active' : '')} onClick={() => setEditing(true)}>
-                <Icon name="edit" size={13} /> Edit
-              </button>
-              <button className={'topbar__seg-btn' + (!editing ? ' active' : '')} onClick={() => setEditing(false)}>
-                <Icon name="eye" size={13} /> Preview
-              </button>
-            </div>
-            {/* Autosave indicator */}
-            {editing && (
+          {!editing ? (
+            <header className="topbar topbar--learner">
+              <div className="topbar--learner__strip"><div className="topbar--learner__fill" ref={progFillRef}></div></div>
+              <div className="topbar--learner__inner">
+                <button className="topbar__menubtn topbar__menubtn--lx" onClick={() => document.body.classList.toggle('nav-open')} aria-label="Menu">
+                  <Icon name="menu" size={16} />
+                </button>
+                <span className="topbar--learner__title" dangerouslySetInnerHTML={{ __html: course.meta.title }}></span>
+                <span className="topbar__spacer"></span>
+                <span className="topbar--learner__pct">Progress <b ref={progPctRef}>0%</b></span>
+              </div>
+            </header>
+          ) : (
+            <header className="topbar">
+              <button className="topbar__menubtn" onClick={() => document.body.classList.toggle('nav-open')} aria-label="Menu"><Icon name="menu" /></button>
+              <div className="topbar__brand">
+                <span className="topbar__brandmark"><Icon name="layers" size={14} stroke="#fff" /></span>
+                <span className="topbar__brandname">Design Studio</span>
+              </div>
+              <div className="topbar__crumb">
+                <span dangerouslySetInnerHTML={{ __html: course.meta.title }}></span>
+                {editing && <b dangerouslySetInnerHTML={{ __html: crumbTitle }}></b>}
+              </div>
+              <span className="topbar__spacer"></span>
+              <div className="topbar__seg">
+                <button className={'topbar__seg-btn' + (editing ? ' active' : '')} onClick={() => setEditing(true)}>
+                  <Icon name="edit" size={13} /> Edit
+                </button>
+                <button className={'topbar__seg-btn' + (!editing ? ' active' : '')} onClick={() => setEditing(false)}>
+                  <Icon name="eye" size={13} /> Preview
+                </button>
+              </div>
               <span className="topbar__autosave topbar__autosave--saved">
                 <span className="topbar__dot"></span> All changes saved
               </span>
-            )}
-            {/* Publish / Export */}
-            {editing && (
               <button className="btn-publish" onClick={() => exportScorm(course)}>
                 <Icon name="download" size={13} /> Export SCORM
               </button>
-            )}
-            {/* Library exit */}
-            {editing && (
               <button className="topbar__lib-btn" onClick={backToLibrary} title="Save and return to course library">
                 <Icon name="arrowLeft" size={13} /> Library
               </button>
-            )}
-          </header>
-          {/* Preview pill — shows when in preview mode */}
-          {!editing && (
-            <div className="preview-pill">
-              Previewing as learner — progress isn't saved
-              <button className="preview-pill__back" onClick={() => setEditing(true)}>Back to editing</button>
-            </div>
+            </header>
           )}
           <div className="scroll" ref={scrollRef}>{main}</div>
         </div>

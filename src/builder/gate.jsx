@@ -62,7 +62,7 @@ function Gate({ children }) {
   return (
     <div className="gate">
       <form className="gate__card" onSubmit={submit}>
-        <div className="gate__mark">Course Architect</div>
+        <div className="gate__mark">Design Studio</div>
         <h1 className="gate__title">Team access</h1>
         <p className="gate__sub">Enter the team password to continue.</p>
         <input

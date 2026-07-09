@@ -28,7 +28,7 @@ function Sidebar({ course, currentView, completed, editing, onNavigate,
         <div className="sidebar__head">
           {course.meta.logo
             ? <img className="sidebar__logo" src={course.meta.logo} alt="" />
-            : <span className="sidebar__wordmark">Course Architect</span>}
+            : <span className="sidebar__wordmark">Design Studio</span>}
           <button className="sidebar__home" onClick={() => onNavigate({ type: 'cover' })}>
             <span className="sidebar__title" dangerouslySetInnerHTML={{ __html: course.meta.title }}></span>
             <span className="sidebar__sub">Course home</span>
