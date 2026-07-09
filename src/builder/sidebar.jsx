@@ -4,7 +4,7 @@
 
 function Sidebar({ course, currentView, completed, editing, onNavigate,
                    onAddLesson, onAddSection, onRename, onDelete, onReorder,
-                   progressPct, doneCount, totalLessons, onToggleEdit, onImport, onExportScorm }) {
+                   progressPct, doneCount, totalLessons, onImport, onExportScorm }) {
   const [renaming, setRenaming] = useState(null);
   const [tmp, setTmp] = useState('');
   const [dragId, setDragId] = useState(null);
@@ -115,12 +115,13 @@ function Sidebar({ course, currentView, completed, editing, onNavigate,
           )}
         </nav>
 
-        <div className="sidebar__foot">
-          <button className={'edittoggle' + (editing ? ' on' : '')} onClick={onToggleEdit}>
-            <span className="edittoggle__left"><Icon name={editing ? 'edit' : 'eye'} size={16} /> {editing ? 'Editing' : 'Author mode'}</span>
-            <span className="edittoggle__sw"></span>
-          </button>
-        </div>
+        {editing && (
+          <div className="sidebar__foot">
+            <button className="sidebar__foot-btn" onClick={onExportScorm} title="Export SCORM package">
+              <Icon name="download" size={14} /> Export
+            </button>
+          </div>
+        )}
       </aside>
       <div className="sidebar__scrim" onClick={() => document.body.classList.remove('nav-open')}></div>
     </React.Fragment>

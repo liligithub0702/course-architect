@@ -513,38 +513,53 @@ function App() {
           onExportScorm={() => exportScorm(course)} />
         <div className="main">
           <header className="topbar" style={{ position: 'sticky', top: 0 }}>
-            {/* Scroll progress bar — learner mode */}
-            {!editing && <div className="scroll-prog"><div className="scroll-prog__fill" ref={progFillRef}></div></div>}
-            {/* Hamburger — learner mode (CSS hides in author mode) */}
             <button className="topbar__menubtn" onClick={() => document.body.classList.toggle('nav-open')} aria-label="Menu"><Icon name="menu" /></button>
-            {editing && <button className="btn-lib-exit topbar__lib" onClick={backToLibrary} title="Save and return to course library"><Icon name="arrowLeft" size={14} /> ← Library</button>}
-            <div className="topbar__crumb"><span dangerouslySetInnerHTML={{ __html: course.meta.title }}></span> {editing && <React.Fragment><Icon name="arrowRight" size={13} /> <b dangerouslySetInnerHTML={{ __html: crumbTitle }}></b></React.Fragment>}</div>
-            {/* Segmented lesson bar — learner mode */}
-            {!editing && (
-              <div className="topbar__segments">
-                {lessons.map(l => {
-                  const isDone = completed[l.id];
-                  const isCurrent = view.type === 'lesson' && view.id === l.id;
-                  return (
-                    <div key={l.id}
-                      className={'topbar__seg' + (isDone ? ' done' : '') + (isCurrent && !isDone ? ' current' : '')}
-                      title={l.title}
-                      onClick={() => go({ type: 'lesson', id: l.id })}
-                    />
-                  );
-                })}
-              </div>
-            )}
+            {/* Brand */}
+            <div className="topbar__brand">
+              <span className="topbar__brandmark"><Icon name="layers" size={14} stroke="#fff" /></span>
+              <span className="topbar__brandname">Course Architect</span>
+            </div>
+            {/* Crumb */}
+            <div className="topbar__crumb">
+              <span dangerouslySetInnerHTML={{ __html: course.meta.title }}></span>
+              {editing && <b dangerouslySetInnerHTML={{ __html: crumbTitle }}></b>}
+            </div>
             <span className="topbar__spacer"></span>
-            {!editing && <span className="topbar__prog-pct" ref={progPctRef}>0%</span>}
-            {/* Edit/Preview toggle — always visible in topbar */}
-            <button className={'topbar__modetoggle' + (editing ? ' on' : '')} onClick={() => setEditing(e => !e)}>
-              <Icon name={editing ? 'eye' : 'edit'} size={14} />
-              {editing ? 'Preview' : 'Edit'}
-            </button>
-            {editing && <button className="btn-export" onClick={() => exportScorm(course)}><Icon name="download" size={14} /> Export SCORM</button>}
-            {editing && <button className="btn-ghost" onClick={() => { if (confirm('Reset the whole course back to the blank template? This erases your content.')) { const d = defaultCourse(); setCourse(d); setProgress({ completed: {}, answers: {} }); go({ type: 'cover' }); toast('Course reset'); } }}><Icon name="reset" size={14} /> Reset</button>}
+            {/* Edit / Preview segmented control */}
+            <div className="topbar__seg">
+              <button className={'topbar__seg-btn' + (editing ? ' active' : '')} onClick={() => setEditing(true)}>
+                <Icon name="edit" size={13} /> Edit
+              </button>
+              <button className={'topbar__seg-btn' + (!editing ? ' active' : '')} onClick={() => setEditing(false)}>
+                <Icon name="eye" size={13} /> Preview
+              </button>
+            </div>
+            {/* Autosave indicator */}
+            {editing && (
+              <span className="topbar__autosave topbar__autosave--saved">
+                <span className="topbar__dot"></span> All changes saved
+              </span>
+            )}
+            {/* Publish / Export */}
+            {editing && (
+              <button className="btn-publish" onClick={() => exportScorm(course)}>
+                <Icon name="download" size={13} /> Export SCORM
+              </button>
+            )}
+            {/* Library exit */}
+            {editing && (
+              <button className="topbar__lib-btn" onClick={backToLibrary} title="Save and return to course library">
+                <Icon name="arrowLeft" size={13} /> Library
+              </button>
+            )}
           </header>
+          {/* Preview pill — shows when in preview mode */}
+          {!editing && (
+            <div className="preview-pill">
+              Previewing as learner — progress isn't saved
+              <button className="preview-pill__back" onClick={() => setEditing(true)}>Back to editing</button>
+            </div>
+          )}
           <div className="scroll" ref={scrollRef}>{main}</div>
         </div>
         {showImporter && <ImportModal onImport={importCourse} onClose={() => setShowImporter(false)} />}
