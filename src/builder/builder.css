@@ -70,7 +70,7 @@ button { font-family: inherit; }
   display: flex; flex-direction: column;
   position: sticky; top: 0; height: 100vh;
   border-right: 1px solid rgba(29,34,48,0.08);
-  box-shadow: 2px 0 12px rgba(29,34,48,0.06);
+  box-shadow: 24px 0 60px -40px rgba(20,24,48,0.35);
 }
 .sidebar__head {
   padding: 22px 22px 18px; border-bottom: 1px solid rgba(29,34,48,0.06);
@@ -120,12 +120,17 @@ button { font-family: inherit; }
 .navitem__check {
   width: 22px; height: 22px; flex: none; border-radius: 50%;
   border: 2px solid rgba(29,34,48,0.18); display: grid; place-items: center; transition: all .2s;
-  color: transparent;
+  color: transparent; background: #fff;
 }
-.navitem.is-done .navitem__check { background: var(--green); border-color: var(--green); color: #fff; }
-.navitem.is-active .navitem__check { border-color: var(--magenta); }
+.navitem.is-done .navitem__check { background: var(--indigo); border-color: var(--indigo); color: #fff; }
+.navitem.is-active .navitem__check { border-color: var(--magenta); border-width: 2px; color: var(--magenta); }
 .navitem.is-locked { opacity: .42; }
 .navitem__label { flex: 1; line-height: 1.3; }
+.navitem__sub {
+  display: block; font-size: 11px; font-weight: 600; color: #9aa0ad; margin-top: 2px; letter-spacing: .01em;
+}
+.navitem.is-done .navitem__sub { color: var(--indigo); opacity: .7; }
+.navitem.is-active .navitem__sub { color: var(--magenta); }
 .navitem__drag { opacity: 0; color: #9aa0ad; cursor: grab; transition: opacity .14s; }
 .navitem:hover .navitem__drag { opacity: 1; }
 .navitem.dragging { opacity: .4; }
@@ -442,15 +447,18 @@ body.editing .hero2 [data-editable]:hover { background: rgba(255,255,255,.12); }
 /* ============================================================
    COMPLETION SCREEN
    ============================================================ */
+@keyframes trophy-pop { 0% { opacity: 0; transform: scale(.5) translateY(20px); } 60% { transform: scale(1.12) translateY(-4px); } 80% { transform: scale(.95); } 100% { opacity: 1; transform: none; } }
+@keyframes complete-rise { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+
 .complete { text-align: center; padding: 40px 0 60px; }
-.complete__ring { width: 150px; height: 150px; margin: 0 auto 28px; position: relative; }
+.complete__ring { width: 150px; height: 150px; margin: 0 auto 28px; position: relative; animation: complete-rise .7s .2s cubic-bezier(.22,.61,.36,1) both; }
 .complete__ring svg { transform: rotate(-90deg); }
 .complete__ring-track { stroke: var(--canvas-2); }
 .complete__ring-fill { stroke: var(--green); stroke-linecap: round; transition: stroke-dashoffset 1s cubic-bezier(.4,0,.2,1); }
 .complete__pct { position: absolute; inset: 0; display: grid; place-items: center; font-size: 34px; font-weight: 900; color: var(--indigo); }
-.complete h1 { font-size: 38px; margin-bottom: 12px; }
-.complete__sub { font-size: 18px; color: var(--ink-soft); max-width: 48ch; margin: 0 auto 28px; }
-.complete__award { width: 76px; height: 76px; border-radius: 50%; background: color-mix(in srgb, var(--green) 16%, #fff); color: var(--green); display: grid; place-items: center; margin: 0 auto 22px; }
+.complete h1 { font-size: 38px; margin-bottom: 12px; animation: complete-rise .7s .35s cubic-bezier(.22,.61,.36,1) both; }
+.complete__sub { font-size: 18px; color: var(--ink-soft); max-width: 48ch; margin: 0 auto 28px; animation: complete-rise .7s .5s cubic-bezier(.22,.61,.36,1) both; }
+.complete__award { width: 76px; height: 76px; border-radius: 50%; background: color-mix(in srgb, var(--green) 16%, #fff); color: var(--green); display: grid; place-items: center; margin: 0 auto 22px; animation: trophy-pop .7s cubic-bezier(.22,.61,.36,1) both; }
 .complete__stats { display: flex; gap: 30px; justify-content: center; margin-bottom: 32px; }
 .complete__stat .n { font-size: 30px; font-weight: 900; color: var(--indigo); }
 .complete__stat .l { font-size: 12.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--gray); }
@@ -837,6 +845,36 @@ body.editing [data-editable]:hover { background: color-mix(in srgb, var(--blue) 
 /* ============================================================
    Site login gate
    ============================================================ */
+/* learner topbar segment pills */
+.topbar--learner__pills {
+  display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+}
+.topbar--learner__pill {
+  width: 28px; height: 6px; border-radius: 99px;
+  background: rgba(38,35,93,0.12); transition: all .22s cubic-bezier(.4,0,.2,1);
+  cursor: pointer; border: none; padding: 0; flex-shrink: 0;
+}
+.topbar--learner__pill.is-done { background: var(--indigo); opacity: .7; }
+.topbar--learner__pill.is-active {
+  background: var(--magenta); opacity: 1; width: 38px;
+  box-shadow: 0 2px 8px -2px rgba(222,27,84,.45);
+}
+@media (max-width: 640px) { .topbar--learner__pills { display: none; } }
+
+/* logo chip (gradient square with accent dot) */
+.topbar--learner__chip {
+  width: 32px; height: 32px; border-radius: 9px; flex: none;
+  background: linear-gradient(135deg, var(--indigo), var(--indigo-deep));
+  display: grid; place-items: center; position: relative; flex-shrink: 0;
+}
+.topbar--learner__chip::after {
+  content: ''; position: absolute; bottom: 5px; right: 5px;
+  width: 7px; height: 7px; border-radius: 50%; background: var(--magenta);
+  border: 1.5px solid rgba(255,255,255,0.6);
+}
+
+@keyframes gate-rise { from { opacity: 0; transform: translateY(28px) scale(.96); } to { opacity: 1; transform: none; } }
+
 .gate {
   position: fixed; inset: 0; z-index: 9999;
   display: grid; place-items: center; padding: 24px;
@@ -849,6 +887,7 @@ body.editing [data-editable]:hover { background: color-mix(in srgb, var(--blue) 
   width: 100%; max-width: 360px; background: #fff;
   border-radius: var(--radius-lg); padding: 36px 32px;
   box-shadow: var(--shadow-lg); text-align: center;
+  animation: gate-rise .55s cubic-bezier(.22,.61,.36,1) both;
 }
 .gate__card--loading { color: var(--gray); font-weight: 600; }
 .gate__mark { font-size: 13px; font-weight: 800; letter-spacing: .04em; color: var(--magenta); text-transform: uppercase; margin-bottom: 18px; }

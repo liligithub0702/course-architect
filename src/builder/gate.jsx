@@ -62,6 +62,12 @@ function Gate({ children }) {
   return (
     <div className="gate">
       <form className="gate__card" onSubmit={submit}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg, #26235D, #1A1842)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="7" height="7" rx="1"/><rect x="15" y="3" width="7" height="7" rx="1"/><rect x="2" y="14" width="7" height="7" rx="1"/><rect x="15" y="14" width="7" height="7" rx="1"/></svg>
+            <span style={{ position: 'absolute', bottom: 8, right: 8, width: 8, height: 8, borderRadius: '50%', background: '#DE1B54', border: '1.5px solid rgba(255,255,255,0.6)' }}></span>
+          </div>
+        </div>
         <div className="gate__mark">Design Studio</div>
         <h1 className="gate__title">Team access</h1>
         <p className="gate__sub">Enter the team password to continue.</p>

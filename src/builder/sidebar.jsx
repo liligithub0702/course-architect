@@ -80,14 +80,21 @@ function Sidebar({ course, currentView, completed, editing, onNavigate,
                   role="button" tabIndex={0}
                   onClick={() => renaming !== item.id && onNavigate({ type: 'lesson', id: item.id })}
                   onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && renaming !== item.id) { e.preventDefault(); onNavigate({ type: 'lesson', id: item.id }); } }}>
-                  <span className="navitem__check">{isDone && <Icon name="check" size={13} />}</span>
+                  <span className="navitem__check">
+                    {isDone ? <Icon name="check" size={13} /> : isActive ? <Icon name="play" size={11} /> : null}
+                  </span>
                   {renaming === item.id ? (
                     <input className="nav-rename" autoFocus value={tmp}
                       onClick={(e) => e.stopPropagation()}
                       onChange={(e) => setTmp(e.target.value)} onBlur={commitRename}
                       onKeyDown={(e) => { if (e.key === 'Enter') commitRename(); }} />
                   ) : (
-                    <span className="navitem__label">{item.title}</span>
+                    <span className="navitem__label">
+                      {item.title}
+                      {(isDone || isActive) && !editing && (
+                        <span className="navitem__sub">{isDone ? 'Complete' : 'In progress'}</span>
+                      )}
+                    </span>
                   )}
                   {editing && renaming !== item.id && (
                     <React.Fragment>

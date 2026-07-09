@@ -519,9 +519,24 @@ function App() {
                 <button className="topbar__menubtn topbar__menubtn--lx" onClick={() => document.body.classList.toggle('nav-open')} aria-label="Menu">
                   <Icon name="menu" size={16} />
                 </button>
+                <div className="topbar--learner__chip" aria-hidden="true">
+                  <Icon name="layers" size={14} stroke="#fff" />
+                </div>
                 <span className="topbar--learner__title" dangerouslySetInnerHTML={{ __html: course.meta.title }}></span>
                 <span className="topbar__spacer"></span>
-                <span className="topbar--learner__pct">Progress <b ref={progPctRef}>0%</b></span>
+                {lessons.length > 0 && lessons.length <= 20 && (
+                  <div className="topbar--learner__pills" aria-label="Lesson progress">
+                    {lessons.map(l => {
+                      const isDone = completed[l.id];
+                      const isCurrent = view.type === 'lesson' && view.id === l.id;
+                      return (
+                        <button key={l.id} className={'topbar--learner__pill' + (isDone ? ' is-done' : isCurrent ? ' is-active' : '')}
+                          title={l.title} onClick={() => go({ type: 'lesson', id: l.id })} aria-label={l.title} />
+                      );
+                    })}
+                  </div>
+                )}
+                <span className="topbar--learner__pct"><b ref={progPctRef}>0%</b></span>
                 <button className="topbar--learner__editbtn" onClick={() => setEditing(true)} title="Back to editing">
                   <Icon name="edit" size={14} /> Edit
                 </button>
