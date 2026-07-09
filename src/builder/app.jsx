@@ -522,6 +522,9 @@ function App() {
                 <span className="topbar--learner__title" dangerouslySetInnerHTML={{ __html: course.meta.title }}></span>
                 <span className="topbar__spacer"></span>
                 <span className="topbar--learner__pct">Progress <b ref={progPctRef}>0%</b></span>
+                <button className="topbar--learner__editbtn" onClick={() => setEditing(true)} title="Back to editing">
+                  <Icon name="edit" size={14} /> Edit
+                </button>
               </div>
             </header>
           ) : (

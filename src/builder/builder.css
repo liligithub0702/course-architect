@@ -223,9 +223,22 @@ button { font-family: inherit; }
   font-size: 13px; font-weight: 600; color: #5B6171; font-variant-numeric: tabular-nums; flex-shrink: 0;
 }
 .topbar--learner__pct b { color: #26235D; font-weight: 700; }
+.topbar--learner__editbtn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(38,35,93,0.06); border: 1px solid rgba(38,35,93,0.14);
+  color: #26235D; border-radius: 8px; padding: 6px 13px;
+  font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all .14s;
+  flex-shrink: 0;
+}
+.topbar--learner__editbtn:hover { background: rgba(38,35,93,0.12); border-color: rgba(38,35,93,0.28); }
 
-/* learner mode: hide sidebar, full-width layout */
-body:not(.editing) .sidebar { display: none; }
+/* learner mode: sidebar slides off-screen (not display:none so hamburger can reveal it) */
+body:not(.editing) .sidebar {
+  position: fixed; left: 0; top: 0; height: 100vh; z-index: 60;
+  transform: translateX(-100%); transition: transform .28s cubic-bezier(.4,0,.2,1);
+  box-shadow: var(--shadow-lg);
+}
+body.nav-open:not(.editing) .sidebar { transform: translateX(0); }
 body:not(.editing) .scroll { background: #F4F5F8; }
 body:not(.editing) .canvas { background: transparent; }
 
@@ -999,8 +1012,7 @@ body:not(.editing) [data-reveal].is-visible {
 /* --- Premium learner canvas & lesson head typography --- */
 body:not(.editing) .canvas { max-width: 1040px; overflow-x: clip; padding-left: 56px; }
 /* Full-width layout when sidebar is fixed overlay in learner mode */
-body:not(.editing) .app { display: block; }
-body:not(.editing) .main { width: 100%; }
+/* learner mode: sidebar is off-screen so .main naturally fills full width in flex */
 body:not(.editing) .lessonhead { padding: 80px 0 40px; margin-bottom: 0; }
 body:not(.editing) .lessonhead__kicker {
   display: inline-flex; align-items: center; gap: 10px; margin-bottom: 26px;
@@ -1143,14 +1155,7 @@ body:not(.editing) .topbar:not(.topbar--learner) .topbar__spacer { display: none
   flex: 1; display: flex; align-items: center; gap: 5px;
   padding: 0 8px; min-width: 80px;
 }
-.topbar__seg {
-  flex: 1; height: 5px; border-radius: 3px;
-  background: rgba(38,35,93,0.12); cursor: pointer;
-  transition: opacity .15s;
-}
-.topbar__seg:hover { opacity: .7; }
-.topbar__seg.done { background: linear-gradient(90deg, #26235D, #DE1B54); }
-.topbar__seg.current { flex: 1.5; background: #B7BBC9; }
+/* old lesson-segment progress pills removed — replaced by topbar__seg-btn segmented control */
 
 /* Section divider: eyebrow label + extending line */
 body:not(.editing) .blk-heading .eyebrow {
@@ -1337,15 +1342,7 @@ body:not(.editing) .lessonhead__parallax { will-change: opacity, transform; }
 }
 .preview-pill__back:hover { background: rgba(255,255,255,.22); }
 
-/* sidebar footer — keep for library-exit + export in edit mode */
-.sidebar__foot { padding: 12px 14px; border-top: 1px solid rgba(255,255,255,.1); display: flex; gap: 8px; }
-.sidebar__foot-btn {
-  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
-  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14);
-  border-radius: 10px; padding: 9px 10px; color: rgba(255,255,255,.8);
-  font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all .14s;
-}
-.sidebar__foot-btn:hover { background: rgba(255,255,255,.14); color: #fff; }
+/* sidebar footer styles defined near the top of this file (light theme) */
 
 /* hide old topbar elements that are now replaced */
 .topbar__modetoggle { display: none; }
