@@ -1251,7 +1251,7 @@ body:not(.editing) .lessonhead__parallax { will-change: opacity, transform; }
 /* ============================================================
    TOPBAR — redesigned (segmented Edit/Preview, autosave, Publish)
    ============================================================ */
-.topbar {
+.topbar:not(.topbar--learner) {
   height: 56px;
   background: var(--indigo-deep);
   backdrop-filter: none;
