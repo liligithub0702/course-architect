@@ -520,7 +520,7 @@ function App() {
                   <Icon name="menu" size={16} />
                 </button>
                 <div className="topbar--learner__chip" aria-hidden="true">
-                  <Icon name="layers" size={14} stroke="#fff" />
+                  <div className="topbar--learner__chip-dot"></div>
                 </div>
                 <span className="topbar--learner__title" dangerouslySetInnerHTML={{ __html: course.meta.title }}></span>
                 <span className="topbar__spacer"></span>
@@ -546,7 +546,7 @@ function App() {
             <header className="topbar">
               <button className="topbar__menubtn" onClick={() => document.body.classList.toggle('nav-open')} aria-label="Menu"><Icon name="menu" /></button>
               <div className="topbar__brand">
-                <span className="topbar__brandmark"><Icon name="layers" size={14} stroke="#fff" /></span>
+                <span className="topbar__brandmark">✦</span>
                 <span className="topbar__brandname">Design<span style={{ fontWeight: 500, color: 'rgba(255,255,255,0.5)' }}> Studio</span></span>
               </div>
               <div className="topbar__crumb">

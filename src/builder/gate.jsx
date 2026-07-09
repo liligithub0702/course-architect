@@ -67,10 +67,7 @@ function Gate({ children }) {
       <form className={'gate__card' + (shaking ? ' is-shaking' : '')} onSubmit={submit}>
         <div className="gate__logo-row">
           <div className="gate__logo-chip" aria-hidden="true">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="3" width="7" height="7" rx="1"/><rect x="15" y="3" width="7" height="7" rx="1"/>
-              <rect x="2" y="14" width="7" height="7" rx="1"/><rect x="15" y="14" width="7" height="7" rx="1"/>
-            </svg>
+            <div className="gate__logo-dot"></div>
           </div>
           <span className="gate__mark">Design Studio</span>
         </div>

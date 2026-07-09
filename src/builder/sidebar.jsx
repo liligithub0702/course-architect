@@ -81,7 +81,7 @@ function Sidebar({ course, currentView, completed, editing, onNavigate,
                   onClick={() => renaming !== item.id && onNavigate({ type: 'lesson', id: item.id })}
                   onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && renaming !== item.id) { e.preventDefault(); onNavigate({ type: 'lesson', id: item.id }); } }}>
                   <span className="navitem__check">
-                    {isDone ? <Icon name="check" size={13} /> : isActive ? <Icon name="play" size={11} /> : null}
+                    {isDone ? '✓' : isActive ? '▶' : lessonNum}
                   </span>
                   {renaming === item.id ? (
                     <input className="nav-rename" autoFocus value={tmp}
