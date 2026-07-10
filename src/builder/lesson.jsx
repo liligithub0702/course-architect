@@ -199,14 +199,23 @@ function LessonView({ lesson, index, editing, onChangeLesson, answers, onAnswer,
       {/* footer */}
       {!editing && (
         <div className="lessonfoot">
-          <button className="lessonfoot__prev" onClick={onPrev} disabled={isFirst} style={{ visibility: isFirst ? 'hidden' : 'visible' }}>
-            <Icon name="arrowLeft" size={17} /> Previous
-          </button>
-          <span className="lessonfoot__spacer"></span>
-          <button className={'lessonfoot__cta' + (completed ? ' done' : '') + (isLast ? ' finish' : '')} onClick={onContinue}>
-            {isLast ? <React.Fragment>Finish course <Icon name="award" size={18} /></React.Fragment>
-                    : <React.Fragment>{completed ? 'Next lesson' : 'Complete & continue'} <Icon name="arrowRight" size={18} /></React.Fragment>}
-          </button>
+          <div className="lessonfoot__status">
+            <span className={'lessonfoot__dot' + (completed ? ' is-complete' : '')}></span>
+            <span className={'lessonfoot__statuslabel' + (completed ? ' is-complete' : '')}>
+              {completed ? 'Lesson complete' : 'Continue to complete this lesson'}
+            </span>
+          </div>
+          <div className="lessonfoot__actions">
+            {!isFirst && (
+              <button className="lessonfoot__prev" onClick={onPrev}>
+                <Icon name="arrowLeft" size={17} /> Previous
+              </button>
+            )}
+            <button className={'lessonfoot__cta' + (completed ? ' done' : '') + (isLast ? ' finish' : '')} onClick={onContinue}>
+              {isLast ? 'Finish course' : completed ? 'Next lesson' : 'Complete & continue'}
+              <span className="lessonfoot__arrow" aria-hidden="true">→</span>
+            </button>
+          </div>
         </div>
       )}
 
